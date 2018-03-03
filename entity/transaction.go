@@ -1,7 +1,5 @@
 package entity
 
-import uuid "github.com/satori/go.uuid"
-
 type TxID string
 
 type TxType int
@@ -21,7 +19,7 @@ type Transaction struct {
 
 func newTransaction(typ TxType, from, to UserID, amount Amount, message string) *Transaction {
 	return &Transaction{
-		ID:      TxID(uuid.NewV4().String()),
+		ID:      TxID(newID()),
 		Type:    typ,
 		From:    from,
 		To:      to,

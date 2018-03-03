@@ -5,8 +5,7 @@ import (
 )
 
 var (
-	ErrSameUser            = errors.New("cannot pay/claim between same users")
-	ErrInsufficientBalance = errors.New("insufficient balance")
+	ErrSameUser = errors.New("cannot pay/claim between same users")
 )
 
 type UserID string
@@ -49,4 +48,14 @@ func (u *User) Pay(to *User, amount Amount, message string) (*Transaction, error
 	}
 
 	return newTransaction(TxTypePay, u.ID, to.ID, amount, message), nil
+}
+
+func (u *User) Claim(to *User, amount Amount, message string) (*Invoice, error) {
+	if u.ID == to.ID {
+		return nil, ErrSameUser
+	}
+	if amount == Amount(0) {
+		return nil, ErrZeroAmount
+	}
+	return newInvoice(u.ID, to.ID, amount, message), nil
 }

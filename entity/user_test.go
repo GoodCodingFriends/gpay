@@ -3,13 +3,12 @@ package entity
 import (
 	"testing"
 
-	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 )
 
 func newUser() *User {
 	return &User{
-		ID:          UserID(uuid.NewV4().String()),
+		ID:          UserID(newID()),
 		FirstName:   "kumiko",
 		LastName:    "omae",
 		DisplayName: "omae-chan",
@@ -30,6 +29,13 @@ func TestUser_Pay_errors(t *testing.T) {
 		_, err := from.Pay(to, 100, "")
 		require.Equal(t, ErrInsufficientBalance, err)
 	})
+
+	t.Run("amount is 0", func(t *testing.T) {
+		from := newUser()
+		to := newUser()
+		_, err := from.Pay(to, 0, "")
+		require.Equal(t, ErrZeroAmount, err)
+	})
 }
 
 func TestUser_Pay_success(t *testing.T) {
@@ -42,4 +48,19 @@ func TestUser_Pay_success(t *testing.T) {
 	require.Equal(t, to.ID, tx.To)
 	require.Equal(t, Amount(300), tx.Amount)
 	require.Equal(t, "msg", tx.Message)
+}
+
+func TestUser_Claim_errors(t *testing.T) {
+	t.Run("same user", func(t *testing.T) {
+		u := newUser()
+		_, err := u.Claim(u, 100, "")
+		require.Equal(t, ErrSameUser, err)
+	})
+
+	t.Run("amount is 0", func(t *testing.T) {
+		from := newUser()
+		to := newUser()
+		_, err := from.Claim(to, 0, "")
+		require.Equal(t, ErrZeroAmount, err)
+	})
 }

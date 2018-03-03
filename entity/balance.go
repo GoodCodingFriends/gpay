@@ -1,7 +1,13 @@
 package entity
 
 import (
+	"errors"
 	"sync"
+)
+
+var (
+	ErrInsufficientBalance = errors.New("insufficient balance")
+	ErrZeroAmount          = errors.New("zero amount isn't permit")
 )
 
 type Amount int64
@@ -17,6 +23,9 @@ func (b *balance) Amount() Amount {
 }
 
 func (b *balance) withdraw(amount Amount) error {
+	if amount == 0 {
+		return ErrZeroAmount
+	}
 	if b.amount-amount < 0 {
 		return ErrInsufficientBalance
 	}
