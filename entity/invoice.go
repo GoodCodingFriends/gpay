@@ -1,11 +1,5 @@
 package entity
 
-import "errors"
-
-var (
-	ErrWrongDestination = errors.New("destination user is wrong")
-)
-
 type InvoiceID string
 
 type Invoice struct {
@@ -23,11 +17,4 @@ func newInvoice(from, to UserID, amount Amount, message string) *Invoice {
 		amount:  amount,
 		message: message,
 	}
-}
-
-func (i *Invoice) accept(user *User) error {
-	if user.ID != i.to {
-		return ErrWrongDestination
-	}
-	return nil
 }

@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	ErrSameUser = errors.New("cannot pay/claim between same users")
+	ErrSameUser         = errors.New("cannot pay/claim between same users")
+	ErrWrongDestination = errors.New("destination user is wrong")
 )
 
 type UserID string
@@ -23,27 +24,7 @@ func (u *User) Pay(to *User, amount Amount, message string) (*Transaction, error
 		return nil, ErrSameUser
 	}
 
-	u.balance.mu.Lock()
-	defer u.balance.mu.Unlock()
-
-	var err error
-	rollback := func() func() {
-		b1, b2 := *u.balance, *to.balance
-		return func() {
-			if err != nil {
-				u.balance = &b1
-				to.balance = &b2
-			}
-		}
-	}()
-	defer rollback()
-
-	err = u.balance.withdraw(amount)
-	if err != nil {
-		return nil, err
-	}
-	err = to.balance.deposit(amount)
-	if err != nil {
+	if err := send(u, to, amount); err != nil {
 		return nil, err
 	}
 
@@ -58,4 +39,16 @@ func (u *User) Claim(to *User, amount Amount, message string) (*Invoice, error) 
 		return nil, ErrZeroAmount
 	}
 	return newInvoice(u.ID, to.ID, amount, message), nil
+}
+
+func (u *User) AcceptInvoice(invoice *Invoice, to *User) (*Transaction, error) {
+	if invoice.to != u.ID {
+		return nil, ErrWrongDestination
+	}
+
+	if err := send(u, to, invoice.amount); err != nil {
+		return nil, err
+	}
+
+	return newTransaction(TxTypeClaim, u.ID, to.ID, invoice.amount, invoice.message), nil
 }
