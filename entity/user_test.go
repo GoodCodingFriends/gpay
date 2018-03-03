@@ -41,13 +41,11 @@ func TestUser_Pay_errors(t *testing.T) {
 func TestUser_Pay_success(t *testing.T) {
 	from, to := newUser(), newUser()
 	from.balance.amount = 1000
+
 	tx, err := from.Pay(to, 300, "msg")
 	require.NoError(t, err)
-	require.Equal(t, TxTypePay, tx.Type)
-	require.Equal(t, from.ID, tx.From)
-	require.Equal(t, to.ID, tx.To)
-	require.Equal(t, Amount(300), tx.Amount)
-	require.Equal(t, "msg", tx.Message)
+
+	assertTx(t, tx, from, to, TxTypePay, Amount(300), "msg")
 }
 
 func TestUser_Claim_errors(t *testing.T) {
@@ -63,4 +61,55 @@ func TestUser_Claim_errors(t *testing.T) {
 		_, err := from.Claim(to, 0, "")
 		require.Equal(t, ErrZeroAmount, err)
 	})
+}
+
+func TestUser_Claim_success(t *testing.T) {
+	from, to := newUser(), newUser()
+	to.balance.amount = 1000
+
+	invoice, err := from.Claim(to, 300, "msg")
+	require.NoError(t, err)
+
+	require.Equal(t, from.ID, invoice.from)
+	require.Equal(t, to.ID, invoice.to)
+	require.Equal(t, Amount(300), invoice.amount)
+	require.Equal(t, "msg", invoice.message)
+}
+
+func TestUser_AcceptInvoice_errors(t *testing.T) {
+	t.Run("wrong destination", func(t *testing.T) {
+		invoice := &Invoice{
+			to: "dummy",
+		}
+		u := newUser()
+		_, err := u.AcceptInvoice(invoice, nil)
+		require.Equal(t, ErrWrongDestination, err)
+	})
+}
+
+func TestUser_AcceptInvoice_success(t *testing.T) {
+	from, to := newUser(), newUser()
+	to.balance.amount = 1000
+
+	invoice := &Invoice{
+		ID:      InvoiceID(newID()),
+		from:    from.ID,
+		to:      to.ID,
+		amount:  Amount(300),
+		message: "msg",
+	}
+
+	tx, err := to.AcceptInvoice(invoice, from)
+	require.NoError(t, err)
+
+	assertTx(t, tx, from, to, TxTypeClaim, Amount(300), "msg")
+}
+
+func assertTx(t *testing.T, tx *Transaction, from, to *User, txType TxType, amount Amount, message string) {
+	t.Helper()
+	require.Equal(t, txType, tx.Type)
+	require.Equal(t, from.ID, tx.From)
+	require.Equal(t, to.ID, tx.To)
+	require.Equal(t, amount, tx.Amount)
+	require.Equal(t, message, tx.Message)
 }

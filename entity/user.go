@@ -41,14 +41,14 @@ func (u *User) Claim(to *User, amount Amount, message string) (*Invoice, error) 
 	return newInvoice(u.ID, to.ID, amount, message), nil
 }
 
-func (u *User) AcceptInvoice(invoice *Invoice, to *User) (*Transaction, error) {
+func (u *User) AcceptInvoice(invoice *Invoice, from *User) (*Transaction, error) {
 	if invoice.to != u.ID {
 		return nil, ErrWrongDestination
 	}
 
-	if err := send(u, to, invoice.amount); err != nil {
+	if err := send(u, from, invoice.amount); err != nil {
 		return nil, err
 	}
 
-	return newTransaction(TxTypeClaim, u.ID, to.ID, invoice.amount, invoice.message), nil
+	return newTransaction(TxTypeClaim, from.ID, u.ID, invoice.amount, invoice.message), nil
 }
