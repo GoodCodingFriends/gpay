@@ -20,11 +20,9 @@ type Tx struct {
 }
 
 func (t *Tx) Commit() error {
-	panic("not implemented yet")
-	return nil
+	return t.committer.Commit()
 }
 
 func (t *Tx) Rollback() error {
-	panic("not implemented yet")
-	return nil
+	return t.committer.Rollback()
 }

@@ -13,17 +13,21 @@ type PayParam struct {
 	Message  string
 }
 
-func Pay(repo repository.Repository, p *PayParam) (*entity.Transaction, error) {
+func Pay(repo *repository.Repository, p *PayParam) (*entity.Transaction, error) {
 	result, err := p.From.Pay(p.To, p.Amount, p.Message)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := repo.BeginTx(context.Background())
-
+	tx, err := repo.BeginTx(context.Background())
+	if err != nil {
+		return nil, err
+	}
 	defer func() {
 		if err != nil {
 			tx.Rollback()
+		} else {
+			tx.Commit()
 		}
 	}()
 

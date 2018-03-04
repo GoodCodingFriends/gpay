@@ -21,13 +21,15 @@ type User struct {
 	balance     *balance
 }
 
-func NewUser(firstName, lastName, displayName string) *User {
+func NewUser(conf *Config, firstName, lastName, displayName string) *User {
 	return &User{
 		ID:          UserID(id.New()),
 		FirstName:   firstName,
 		LastName:    lastName,
 		DisplayName: displayName,
-		balance:     &balance{},
+		balance: &balance{
+			conf: conf,
+		},
 	}
 }
 

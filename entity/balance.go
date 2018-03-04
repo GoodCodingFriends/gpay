@@ -19,7 +19,7 @@ func (a *Amount) UnmarshalText(text []byte) error {
 	if err != nil {
 		return err
 	}
-	if n <= 0 {
+	if n >= 0 {
 		return errors.New("invalid amount")
 	}
 	*a = Amount(n)

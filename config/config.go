@@ -13,7 +13,7 @@ var (
 )
 
 type Config struct {
-	entity *entity.Config
+	Entity *entity.Config
 }
 
 var processErr error
