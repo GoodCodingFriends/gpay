@@ -2,34 +2,34 @@ package repository
 
 import (
 	"context"
-
-	"github.com/GoodCodingFriends/gpay/entity"
 )
 
 type Repository struct {
-	User        userRepository
-	Invoice     invoiceRepository
-	Transaction txRepository
+	beginner TxBeginner
 
-	transactor
+	User        UserRepository
+	Invoice     InvoiceRepository
+	Transaction TxRepository
 }
 
-type userRepository interface {
-	FindByID(context.Context, entity.UserID) (*entity.User, error)
-	FindAll(context.Context) ([]*entity.User, error)
-	Store(context.Context, *entity.User) error
-	StoreAll(context.Context, []*entity.User) error
+func (r *Repository) BeginTx(ctx context.Context) (*Tx, error) {
+	committer, err := r.beginner.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &Tx{
+		committer:   committer,
+		User:        r.User,
+		Invoice:     r.Invoice,
+		Transaction: r.Transaction,
+	}, nil
 }
 
-type invoiceRepository interface {
-	FindByID(context.Context, entity.InvoiceID) (*entity.Invoice, error)
-	FindAll(context.Context) ([]*entity.Invoice, error)
-	Store(context.Context, *entity.Invoice) error
-	StoreAll(context.Context, []*entity.Invoice) error
-}
-
-type txRepository interface {
-	FindByID(context.Context, entity.TxID) (*entity.Transaction, error)
-	FindAll(context.Context) ([]*entity.Transaction, error)
-	Store(context.Context, *entity.Transaction) error
+func New(txBeginner TxBeginner, userRepo UserRepository, invoiceRepo InvoiceRepository, txRepo TxRepository) *Repository {
+	return &Repository{
+		beginner:    txBeginner,
+		User:        userRepo,
+		Invoice:     invoiceRepo,
+		Transaction: txRepo,
+	}
 }

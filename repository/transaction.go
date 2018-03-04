@@ -2,14 +2,21 @@ package repository
 
 import "context"
 
-type transactor interface {
-	BeginTx(context.Context) *Tx
+type TxBeginner interface {
+	BeginTx(context.Context) (TxCommitter, error)
+}
+
+type TxCommitter interface {
+	Commit() error
+	Rollback() error
 }
 
 type Tx struct {
-	User        userRepository
-	Invoice     invoiceRepository
-	Transaction txRepository
+	committer TxCommitter
+
+	User        UserRepository
+	Invoice     InvoiceRepository
+	Transaction TxRepository
 }
 
 func (t *Tx) Commit() error {
