@@ -25,9 +25,6 @@ func send(from, to *User, amount Amount) error {
 	if err != nil {
 		return err
 	}
-	err = to.balance.deposit(amount)
-	if err != nil {
-		return err
-	}
+	to.balance.deposit(amount)
 	return nil
 }
