@@ -1,5 +1,5 @@
 package entity
 
 type Config struct {
-	BalanceLowerLimit Amount `default:"5000"`
+	BalanceLowerLimit Amount `default:"-5000"`
 }
