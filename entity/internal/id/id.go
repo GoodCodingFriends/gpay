@@ -1,7 +1,7 @@
-package entity
+package id
 
 import uuid "github.com/satori/go.uuid"
 
-func newID() string {
+func New() string {
 	return uuid.NewV4().String()
 }
