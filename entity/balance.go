@@ -12,28 +12,23 @@ var (
 
 type Amount int64
 
-type balance struct {
-	amount Amount
+type Balance struct {
+	Amount Amount
 
 	mu sync.Mutex
 }
 
-func (b *balance) Amount() Amount {
-	return b.amount
-}
-
-func (b *balance) withdraw(amount Amount) error {
+func (b *Balance) withdraw(amount Amount) error {
 	if amount == 0 {
 		return ErrZeroAmount
 	}
-	if b.amount-amount < 0 {
+	if b.Amount-amount < 0 {
 		return ErrInsufficientBalance
 	}
-	b.amount -= amount
+	b.Amount -= amount
 	return nil
 }
 
-func (b *balance) deposit(amount Amount) error {
-	b.amount += amount
-	return nil
+func (b *Balance) deposit(amount Amount) {
+	b.Amount += amount
 }
