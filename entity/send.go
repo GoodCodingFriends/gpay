@@ -9,8 +9,9 @@ func send(from, to *User, amount Amount) error {
 	to.balance.mu.Lock()
 	defer to.balance.mu.Unlock()
 
+	// rollback users if err was occurred
 	var err error
-	rollback := func() func() {
+	defer func() func() {
 		b1, b2 := *from.balance, *to.balance
 		return func() {
 			if err != nil {
@@ -19,7 +20,6 @@ func send(from, to *User, amount Amount) error {
 			}
 		}
 	}()
-	defer rollback()
 
 	err = from.balance.withdraw(amount)
 	if err != nil {

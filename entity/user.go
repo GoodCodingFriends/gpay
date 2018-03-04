@@ -38,6 +38,7 @@ func (u *User) Claim(to *User, amount Amount, message string) (*Invoice, error) 
 	if amount == Amount(0) {
 		return nil, ErrZeroAmount
 	}
+
 	return newInvoice(u.ID, to.ID, amount, message), nil
 }
 
