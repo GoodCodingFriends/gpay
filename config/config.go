@@ -3,6 +3,7 @@ package config
 import (
 	"sync"
 
+	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -12,7 +13,7 @@ var (
 )
 
 type Config struct {
-	BalanceLowerLimit int64
+	entity *entity.Config
 }
 
 var processErr error
