@@ -1,5 +1,7 @@
 package entity
 
+import "github.com/GoodCodingFriends/gpay/entity/internal/id"
+
 type TxID string
 
 type TxType int
@@ -19,7 +21,7 @@ type Transaction struct {
 
 func newTransaction(typ TxType, from, to UserID, amount Amount, message string) *Transaction {
 	return &Transaction{
-		ID:      TxID(newID()),
+		ID:      TxID(id.New()),
 		Type:    typ,
 		From:    from,
 		To:      to,

@@ -3,12 +3,13 @@ package entity
 import (
 	"testing"
 
+	"github.com/GoodCodingFriends/gpay/entity/internal/id"
 	"github.com/stretchr/testify/require"
 )
 
 func newUser() *User {
 	return &User{
-		ID:          UserID(newID()),
+		ID:          UserID(id.New()),
 		FirstName:   "kumiko",
 		LastName:    "omae",
 		DisplayName: "omae-chan",
@@ -92,7 +93,7 @@ func TestUser_AcceptInvoice_success(t *testing.T) {
 	to.balance.amount = 1000
 
 	invoice := &Invoice{
-		ID:      InvoiceID(newID()),
+		ID:      InvoiceID(id.New()),
 		from:    from.ID,
 		to:      to.ID,
 		amount:  Amount(300),

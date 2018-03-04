@@ -1,10 +1,13 @@
 package entitytest
 
-import "github.com/GoodCodingFriends/gpay/entity"
+import (
+	"github.com/GoodCodingFriends/gpay/entity"
+	"github.com/GoodCodingFriends/gpay/entity/internal/id"
+)
 
 func NewUser() *entity.User {
 	return &entity.User{
-		ID:          UserID(newID()),
+		ID:          entity.UserID(id.NewID()),
 		FirstName:   "kumiko",
 		LastName:    "omae",
 		DisplayName: "omae-chan",

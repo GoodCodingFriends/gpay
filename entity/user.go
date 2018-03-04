@@ -16,7 +16,7 @@ type User struct {
 	FirstName   string
 	LastName    string
 	DisplayName string
-	balance     *balance
+	balance     *Balance
 }
 
 func (u *User) Pay(to *User, amount Amount, message string) (*Transaction, error) {
