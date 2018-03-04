@@ -2,6 +2,8 @@ package entity
 
 import (
 	"errors"
+
+	"github.com/GoodCodingFriends/gpay/entity/internal/id"
 )
 
 var (
@@ -16,7 +18,17 @@ type User struct {
 	FirstName   string
 	LastName    string
 	DisplayName string
-	balance     *Balance
+	balance     *balance
+}
+
+func NewUser(firstName, lastName, displayName string) *User {
+	return &User{
+		ID:          UserID(id.New()),
+		FirstName:   firstName,
+		LastName:    lastName,
+		DisplayName: displayName,
+		balance:     &balance{},
+	}
 }
 
 func (u *User) Pay(to *User, amount Amount, message string) (*Transaction, error) {
