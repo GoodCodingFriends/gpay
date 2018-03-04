@@ -14,20 +14,20 @@ type PayParam struct {
 }
 
 func Pay(repo repository.Repository, p *PayParam) (*entity.Transaction, error) {
-	if result, err := p.From.Pay(p.To, p.Amount, p.Message); err != nil {
+	result, err := p.From.Pay(p.To, p.Amount, p.Message)
+	if err != nil {
 		return nil, err
 	}
 
-	tx := repo.BeginTx()
+	tx := repo.BeginTx(context.Background())
 
-	var err error
 	defer func() {
 		if err != nil {
 			tx.Rollback()
 		}
 	}()
 
-	err = tx.User.StoreAll(context.Background(), []*entity.User{from, to})
+	err = tx.User.StoreAll(context.Background(), []*entity.User{p.From, p.To})
 	if err != nil {
 		return nil, err
 	}
