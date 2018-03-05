@@ -19,24 +19,25 @@ func Pay(repo *repository.Repository, p *PayParam) (*entity.Transaction, error) 
 		return nil, err
 	}
 
-	tx, err := repo.BeginTx(context.Background())
+	tx, ctx, err := repo.BeginTx(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		if err != nil {
+		if err := recover(); err != nil {
 			tx.Rollback()
-		} else {
-			tx.Commit()
+			panic(err)
+		} else if err != nil {
+			tx.Rollback()
 		}
 	}()
 
-	err = tx.User.StoreAll(context.Background(), []*entity.User{p.From, p.To})
+	err = tx.User.StoreAll(ctx, []*entity.User{p.From, p.To})
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.Transaction.Store(context.Background(), result)
+	err = tx.Transaction.Store(ctx, result)
 	if err != nil {
 		return nil, err
 	}

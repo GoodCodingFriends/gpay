@@ -6,7 +6,6 @@ import (
 
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository"
-	"github.com/mitchellh/copystructure"
 )
 
 var (
@@ -20,15 +19,17 @@ type inMemoryUserRepository struct {
 }
 
 func (r *inMemoryUserRepository) FindByID(ctx context.Context, id entity.UserID) (*entity.User, error) {
-	v, ok := r.m.Load(id)
+	iv, ok := r.m.Load(id)
 	if !ok {
 		return nil, repository.ErrNotFound
 	}
-	return v.(*entity.User), nil
+	v := iv.(entity.User)
+	return &v, nil
 }
 
 func (r *inMemoryUserRepository) Store(ctx context.Context, user *entity.User) error {
-	return store(ctx, &r.m, &r.uncommitted, user.ID, user)
+	store(ctx, &r.m, &r.uncommitted, user.ID, *user)
+	return nil
 }
 
 func (r *inMemoryUserRepository) StoreAll(ctx context.Context, users []*entity.User) error {
@@ -47,7 +48,7 @@ type inMemoryTxRepository struct {
 }
 
 func (r *inMemoryTxRepository) Store(ctx context.Context, tx *entity.Transaction) error {
-	store(ctx, &r.m, &r.uncommitted, tx.ID, tx)
+	store(ctx, &r.m, &r.uncommitted, tx.ID, *tx)
 	return nil
 }
 
@@ -84,12 +85,7 @@ func (c *inMemoryTxCommitter) Rollback() error {
 	return nil
 }
 
-func store(ctx context.Context, m *sync.Map, um *sync.Map, k, v interface{}) error {
-	v, err := copystructure.Copy(v)
-	if err != nil {
-		return err
-	}
-
+func store(ctx context.Context, m *sync.Map, um *sync.Map, k, v interface{}) {
 	f := ctx.Value(txFlagKey)
 	// in a transaction
 	if f != nil && f.(bool) == true {
@@ -97,7 +93,6 @@ func store(ctx context.Context, m *sync.Map, um *sync.Map, k, v interface{}) err
 	} else {
 		m.Store(k, v)
 	}
-	return nil
 }
 
 func clearUncommitted(c *inMemoryTxCommitter) {
