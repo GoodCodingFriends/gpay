@@ -58,7 +58,7 @@ func (u *User) Claim(to *User, amount Amount, message string) (*Invoice, error) 
 }
 
 func (u *User) AcceptInvoice(invoice *Invoice, from *User) (*Transaction, error) {
-	if invoice.to != u.ID {
+	if invoice.ToID != u.ID {
 		return nil, ErrWrongDestination
 	}
 

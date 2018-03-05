@@ -34,8 +34,6 @@ func TestAcceptInvoice(t *testing.T) {
 		from, to := createUser(t, repo), createUser(t, repo)
 		param := &AcceptInvoiceParam{
 			InvoiceID: entity.InvoiceID("id"),
-			FromID:    from.ID,
-			ToID:      to.ID,
 		}
 
 		_, err := AcceptInvoice(repo, param)

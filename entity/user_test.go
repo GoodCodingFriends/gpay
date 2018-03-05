@@ -112,8 +112,8 @@ func TestUser_Claim_success(t *testing.T) {
 	invoice, err := from.Claim(to, 300, "msg")
 	require.NoError(t, err)
 
-	require.Equal(t, from.ID, invoice.from)
-	require.Equal(t, to.ID, invoice.to)
+	require.Equal(t, from.ID, invoice.FromID)
+	require.Equal(t, to.ID, invoice.ToID)
 	require.Equal(t, Amount(300), invoice.amount)
 	require.Equal(t, "msg", invoice.message)
 }
@@ -121,7 +121,7 @@ func TestUser_Claim_success(t *testing.T) {
 func TestUser_AcceptInvoice_errors(t *testing.T) {
 	t.Run("wrong destination", func(t *testing.T) {
 		invoice := &Invoice{
-			to: "dummy",
+			ToID: "dummy",
 		}
 		u := newUser()
 		_, err := u.AcceptInvoice(invoice, nil)
@@ -135,8 +135,8 @@ func TestUser_AcceptInvoice_success(t *testing.T) {
 
 	invoice := &Invoice{
 		ID:      InvoiceID(id.New()),
-		from:    from.ID,
-		to:      to.ID,
+		FromID:  from.ID,
+		ToID:    to.ID,
 		amount:  Amount(300),
 		message: "msg",
 	}
