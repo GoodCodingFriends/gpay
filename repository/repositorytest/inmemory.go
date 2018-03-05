@@ -41,6 +41,26 @@ func (r *inMemoryUserRepository) StoreAll(ctx context.Context, users []*entity.U
 	return nil
 }
 
+type inMemoryInvoiceRepository struct {
+	m           sync.Map
+	uncommitted sync.Map
+	repository.InvoiceRepository
+}
+
+func (r *inMemoryInvoiceRepository) FindByID(ctx context.Context, id entity.InvoiceID) (*entity.Invoice, error) {
+	iv, ok := r.m.Load(id)
+	if !ok {
+		return nil, repository.ErrNotFound
+	}
+	v := iv.(entity.Invoice)
+	return &v, nil
+}
+
+func (r *inMemoryInvoiceRepository) Store(ctx context.Context, invoice *entity.Invoice) error {
+	store(ctx, &r.m, &r.uncommitted, invoice.ID, *invoice)
+	return nil
+}
+
 type inMemoryTxRepository struct {
 	m           sync.Map
 	uncommitted sync.Map
@@ -102,11 +122,12 @@ func clearUncommitted(c *inMemoryTxCommitter) {
 
 func NewInMemory() *repository.Repository {
 	user := &inMemoryUserRepository{}
+	invoice := &inMemoryInvoiceRepository{}
 	tx := &inMemoryTxRepository{}
 	return repository.New(
 		&inMemoryTxBeginner{user, tx},
 		user,
-		nil,
+		invoice,
 		tx,
 	)
 }

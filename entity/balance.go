@@ -34,12 +34,20 @@ type balance struct {
 	mu sync.Mutex
 }
 
-func (b *balance) withdraw(amount Amount) error {
+func (b *balance) checkAmount(amount Amount) error {
 	if amount == 0 {
 		return ErrZeroAmount
 	}
 	if b.amount-amount < b.conf.BalanceLowerLimit {
 		return ErrInsufficientBalance
+	}
+	return nil
+}
+
+func (b *balance) withdraw(amount Amount) error {
+	err := b.checkAmount(amount)
+	if err != nil {
+		return err
 	}
 	b.amount -= amount
 	return nil

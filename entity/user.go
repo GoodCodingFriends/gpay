@@ -9,6 +9,7 @@ import (
 var (
 	ErrSameUser         = errors.New("cannot pay/claim between same users")
 	ErrWrongDestination = errors.New("destination user is wrong")
+	ErrCompletedInvoice = errors.New("the invoice is already completed")
 )
 
 type UserID string
@@ -49,8 +50,8 @@ func (u *User) Claim(to *User, amount Amount, message string) (*Invoice, error) 
 	if u.ID == to.ID {
 		return nil, ErrSameUser
 	}
-	if amount == Amount(0) {
-		return nil, ErrZeroAmount
+	if err := to.balance.checkAmount(amount); err != nil {
+		return nil, err
 	}
 
 	return newInvoice(u.ID, to.ID, amount, message), nil
@@ -59,6 +60,10 @@ func (u *User) Claim(to *User, amount Amount, message string) (*Invoice, error) 
 func (u *User) AcceptInvoice(invoice *Invoice, from *User) (*Transaction, error) {
 	if invoice.to != u.ID {
 		return nil, ErrWrongDestination
+	}
+
+	if invoice.IsCompleted {
+		return nil, ErrCompletedInvoice
 	}
 
 	if err := send(u, from, invoice.amount); err != nil {

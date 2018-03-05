@@ -13,7 +13,7 @@ func newUser() *User {
 		FirstName:   "kumiko",
 		LastName:    "omae",
 		DisplayName: "omae-chan",
-		balance: &balance{
+		balance: balance{
 			conf: &Config{
 				BalanceLowerLimit: -5000,
 			},
@@ -73,6 +73,28 @@ func TestUser_Claim_errors(t *testing.T) {
 		u := newUser()
 		_, err := u.Claim(u, 100, "")
 		require.Equal(t, ErrSameUser, err)
+	})
+
+	t.Run("insufficient balance", func(t *testing.T) {
+		cases := []struct {
+			amount int64
+			isErr  bool
+		}{
+			{-5000, true},
+			{-4901, true},
+			{-4900, false},
+		}
+		for _, c := range cases {
+			from := newUser()
+			to := newUser()
+			to.balance.amount = Amount(c.amount)
+			_, err := from.Claim(to, 100, "")
+			if c.isErr {
+				require.Equal(t, ErrInsufficientBalance, err)
+			} else {
+				require.NoError(t, err)
+			}
+		}
 	})
 
 	t.Run("amount is 0", func(t *testing.T) {

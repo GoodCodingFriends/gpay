@@ -48,7 +48,35 @@ func AcceptInvoice(repo *repository.Repository, p *AcceptInvoiceParam) (*entity.
 		return nil, err
 	}
 
-	return to.AcceptInvoice(invoice, from)
+	tx, err := to.AcceptInvoice(invoice, from)
+	if err != nil {
+		return nil, err
+	}
+
+	dbtx, ctx, err := repo.BeginTx(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := recover(); err != nil {
+			dbtx.Rollback()
+			panic(err)
+		} else if err != nil {
+			dbtx.Rollback()
+		}
+	}()
+
+	err = dbtx.User.StoreAll(ctx, []*entity.User{from, to})
+	if err != nil {
+		return nil, err
+	}
+
+	err = dbtx.Transaction.Store(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, err
 }
 
 func findBothUsers(repo *repository.Repository, fromID, toID entity.UserID) (*entity.User, *entity.User, error) {

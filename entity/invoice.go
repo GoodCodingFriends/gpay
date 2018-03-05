@@ -5,10 +5,11 @@ import "github.com/GoodCodingFriends/gpay/entity/internal/id"
 type InvoiceID string
 
 type Invoice struct {
-	ID       InvoiceID
-	from, to UserID
-	amount   Amount
-	message  string
+	ID          InvoiceID
+	IsCompleted bool
+	from, to    UserID
+	amount      Amount
+	message     string
 }
 
 func newInvoice(from, to UserID, amount Amount, message string) *Invoice {
