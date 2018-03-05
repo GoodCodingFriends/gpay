@@ -48,3 +48,7 @@ func (b *balance) withdraw(amount Amount) error {
 func (b *balance) deposit(amount Amount) {
 	b.amount += amount
 }
+
+func GetBalanceAmount(user *User) Amount {
+	return user.balance.amount
+}

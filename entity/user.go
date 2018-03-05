@@ -18,7 +18,7 @@ type User struct {
 	FirstName   string
 	LastName    string
 	DisplayName string
-	balance     *balance
+	balance     balance
 }
 
 func NewUser(conf *Config, firstName, lastName, displayName string) *User {
@@ -27,7 +27,7 @@ func NewUser(conf *Config, firstName, lastName, displayName string) *User {
 		FirstName:   firstName,
 		LastName:    lastName,
 		DisplayName: displayName,
-		balance: &balance{
+		balance: balance{
 			conf: conf,
 		},
 	}

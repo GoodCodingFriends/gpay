@@ -12,11 +12,11 @@ func send(from, to *User, amount Amount) error {
 	// rollback users if err was occurred
 	var err error
 	defer func() func() {
-		b1, b2 := *from.balance, *to.balance
+		b1, b2 := from.balance, to.balance
 		return func() {
 			if err != nil {
-				from.balance = &b1
-				to.balance = &b2
+				from.balance = b1
+				to.balance = b2
 			}
 		}
 	}()
