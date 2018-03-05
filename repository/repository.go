@@ -12,8 +12,6 @@ var (
 type Repository struct {
 	beginner TxBeginner
 
-	uncommittedDMLs []func() error
-
 	User        UserRepository
 	Invoice     InvoiceRepository
 	Transaction TxRepository
