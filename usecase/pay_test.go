@@ -27,8 +27,8 @@ func TestPay(t *testing.T) {
 		from, to := createUser(t, repo), createUser(t, repo)
 		amount := entity.Amount(300)
 		param := &PayParam{
-			From:    from,
-			To:      to,
+			FromID:  from.ID,
+			ToID:    to.ID,
 			Amount:  amount,
 			Message: "msg",
 		}
@@ -51,8 +51,8 @@ func TestPay(t *testing.T) {
 		from, to := createUser(t, repo), createUser(t, repo)
 		amount := entity.Amount(300)
 		param := &PayParam{
-			From:    from,
-			To:      to,
+			FromID:  from.ID,
+			ToID:    to.ID,
 			Amount:  amount,
 			Message: "msg",
 		}

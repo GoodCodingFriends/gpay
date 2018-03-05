@@ -8,13 +8,18 @@ import (
 )
 
 type PayParam struct {
-	From, To *entity.User
-	Amount   entity.Amount
-	Message  string
+	FromID, ToID entity.UserID
+	Amount       entity.Amount
+	Message      string
 }
 
 func Pay(repo *repository.Repository, p *PayParam) (*entity.Transaction, error) {
-	result, err := p.From.Pay(p.To, p.Amount, p.Message)
+	from, to, err := findBothUsers(repo, p.FromID, p.ToID)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := from.Pay(to, p.Amount, p.Message)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +37,7 @@ func Pay(repo *repository.Repository, p *PayParam) (*entity.Transaction, error) 
 		}
 	}()
 
-	err = tx.User.StoreAll(ctx, []*entity.User{p.From, p.To})
+	err = tx.User.StoreAll(ctx, []*entity.User{from, to})
 	if err != nil {
 		return nil, err
 	}
