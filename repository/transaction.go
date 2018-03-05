@@ -3,7 +3,7 @@ package repository
 import "context"
 
 type TxBeginner interface {
-	BeginTx(context.Context) (TxCommitter, error)
+	BeginTx(context.Context) (TxCommitter, context.Context, error)
 }
 
 type TxCommitter interface {
