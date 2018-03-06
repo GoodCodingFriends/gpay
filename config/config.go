@@ -3,6 +3,7 @@ package config
 import (
 	"sync"
 
+	"github.com/GoodCodingFriends/gpay/adapter/controller"
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -13,7 +14,8 @@ var (
 )
 
 type Config struct {
-	Entity *entity.Config
+	Controller *controller.Config
+	Entity     *entity.Config
 }
 
 var processErr error
