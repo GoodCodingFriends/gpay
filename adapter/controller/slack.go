@@ -3,7 +3,6 @@ package controller
 import (
 	"errors"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 
@@ -25,18 +24,20 @@ var (
 )
 
 type SlackBot struct {
-	cfg  *SlackConfig
-	rtm  *slack.RTM
-	repo *repository.Repository
+	logger *log.Logger
+	cfg    *SlackConfig
+	rtm    *slack.RTM
+	repo   *repository.Repository
 }
 
-func NewSlackBot(cfg *SlackConfig) *SlackBot {
+func NewSlackBot(logger *log.Logger, cfg *SlackConfig) *SlackBot {
 	l := slack.New(cfg.APIToken)
-	slack.SetLogger(log.New(os.Stdout, "gpay: ", log.Lshortfile|log.LstdFlags))
+	slack.SetLogger(logger)
 	return &SlackBot{
-		cfg:  cfg,
-		rtm:  l.NewRTM(),
-		repo: repositorytest.NewInMemory(),
+		logger: logger,
+		cfg:    cfg,
+		rtm:    l.NewRTM(),
+		repo:   repositorytest.NewInMemory(),
 	}
 }
 
@@ -67,6 +68,7 @@ func (b *SlackBot) Stop() error {
 //
 func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	if !strings.HasPrefix(e.Text, b.cfg.BotName) {
+		b.logger.Println("not gpay command, ignore")
 		return nil
 	}
 
@@ -93,6 +95,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		if err != nil {
 			return err
 		}
+		b.logger.Println(tx)
 	case cmdTypeClaim:
 		to, amount, err := parsePayCommand(sp[2:])
 		if err != nil {
@@ -107,6 +110,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		if err != nil {
 			return err
 		}
+		b.logger.Println(tx)
 	default:
 		return ErrUnknownCommand
 	}
