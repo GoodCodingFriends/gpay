@@ -17,7 +17,9 @@ import (
 const (
 	cmdTypePay   = "pay"
 	cmdTypeClaim = "claim"
+)
 
+var (
 	ErrUnknownCommand = errors.New("unknown command")
 	ErrInvalidUsage   = errors.New("invalid usage")
 )
@@ -30,7 +32,7 @@ type SlackBot struct {
 
 func NewSlackBot(cfg *SlackConfig) *SlackBot {
 	l := slack.New(cfg.APIToken)
-	l.SetLogger(log.New(os.Stdout, "gpay: ", log.Lshortfile|log.LstdFlags))
+	slack.SetLogger(log.New(os.Stdout, "gpay: ", log.Lshortfile|log.LstdFlags))
 	return &SlackBot{
 		cfg:  cfg,
 		rtm:  l.NewRTM(),
@@ -64,7 +66,7 @@ func (b *SlackBot) Stop() error {
 //   @gpay claim @ktr 500
 //
 func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
-	if !strings.HasPrefix("@"+b.cfg.BotName, e.Text) {
+	if !strings.HasPrefix(e.Text, b.cfg.BotName) {
 		return nil
 	}
 
@@ -73,8 +75,8 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		// show usage
 	}
 
-	cmdType := sp[0]
-	from := e.User
+	cmdType := sp[1]
+	from := entity.UserID(e.User)
 
 	switch cmdType {
 	case cmdTypePay:
@@ -108,11 +110,12 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	default:
 		return ErrUnknownCommand
 	}
+	return nil
 }
 
 func parsePayCommand(sp []string) (to entity.UserID, amount entity.Amount, err error) {
 	n, err := strconv.Atoi(sp[0])
-	if err == nil && strings.HasPrefix("@", sp[1]) {
+	if err == nil && strings.HasPrefix(sp[1], "@") {
 		// format: 500 @ktr
 		amount = entity.Amount(n)
 		to = entity.UserID(sp[1])
@@ -120,19 +123,20 @@ func parsePayCommand(sp []string) (to entity.UserID, amount entity.Amount, err e
 	}
 
 	n, err = strconv.Atoi(sp[1])
-	if err == nil && strings.HasPrefix("@", sp[0]) {
+	if err == nil && strings.HasPrefix(sp[0], "@") {
 		// format: @ktr 500
 		to = entity.UserID(sp[0])
-		amount = entity.Amount(sp[1])
+		amount = entity.Amount(n)
 		return
 	}
 
 	err = ErrInvalidUsage
+	return
 }
 
 func parseClaimCommand(sp []string) (to entity.UserID, amount entity.Amount, err error) {
 	n, err := strconv.Atoi(sp[0])
-	if err == nil && strings.HasPrefix("@", sp[1]) {
+	if err == nil && strings.HasPrefix(sp[1], "@") {
 		// format: 500 @ktr
 		amount = entity.Amount(n)
 		to = entity.UserID(sp[1])
@@ -140,12 +144,13 @@ func parseClaimCommand(sp []string) (to entity.UserID, amount entity.Amount, err
 	}
 
 	n, err = strconv.Atoi(sp[1])
-	if err == nil && strings.HasPrefix("@", sp[0]) {
+	if err == nil && strings.HasPrefix(sp[0], "@") {
 		// format: @ktr 500
 		to = entity.UserID(sp[0])
-		amount = entity.Amount(sp[1])
+		amount = entity.Amount(n)
 		return
 	}
 
 	err = ErrInvalidUsage
+	return
 }

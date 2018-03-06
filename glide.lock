@@ -1,0 +1,25 @@
+hash: 5c58e61f545815f0f3375a8750b3b2430f973ce2bc78a78db6e34f83e1cd0a46
+updated: 2018-03-07T01:30:49.441480155+09:00
+imports:
+- name: github.com/davecgh/go-spew
+  version: 2df174808ee097f90d259e432cc04442cf60be21
+  subpackages:
+  - spew
+- name: github.com/gorilla/websocket
+  version: 6656ddce919367f4c4090b0f89a45854d26da020
+- name: github.com/kelseyhightower/envconfig
+  version: 462fda1f11d8cad3660e52737b8beefd27acfb3f
+- name: github.com/nlopes/slack
+  version: 6122e35778b0b0080e0393fde2bb42ba5fc062ed
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/satori/go.uuid
+  version: 879c5887cd475cd7864858769793b2ceb0d44feb
+- name: github.com/stretchr/testify
+  version: f390dcf405f7b83c997eac1b06768bb9f44dec18
+  subpackages:
+  - assert
+  - require
+testImports: []
