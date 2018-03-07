@@ -51,7 +51,7 @@ func TestSlackBot_handleMessageEvent(t *testing.T) {
 	})
 }
 
-func Test_parsePayCommand(t *testing.T) {
+func Test_parseArgs(t *testing.T) {
 	cases := []struct {
 		in     string
 		hasErr bool
@@ -64,7 +64,7 @@ func Test_parsePayCommand(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		_, _, err := parsePayCommand(strings.Split(c.in, " "))
+		_, _, err := parseArgs(strings.Split(c.in, " "))
 		if c.hasErr {
 			require.Error(t, err)
 		}

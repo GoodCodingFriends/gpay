@@ -85,20 +85,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	case cmdTypePay:
 		return b.handlePayCommand(from, sp[2:])
 	case cmdTypeClaim:
-		to, amount, err := parsePayCommand(sp[2:])
-		if err != nil {
-			return err
-		}
-		tx, err := usecase.Claim(b.repo, &usecase.ClaimParam{
-			FromID:  from,
-			ToID:    to,
-			Amount:  amount,
-			Message: "",
-		})
-		if err != nil {
-			return err
-		}
-		b.logger.Println(tx)
+		return b.handleClaimCommand(from, sp[2:])
 	default:
 		return ErrUnknownCommand
 	}
@@ -106,7 +93,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 }
 
 func (b *SlackBot) handlePayCommand(from entity.UserID, sp []string) error {
-	to, amount, err := parsePayCommand(sp)
+	to, amount, err := parseArgs(sp)
 	if err != nil {
 		return err
 	}
@@ -124,30 +111,28 @@ func (b *SlackBot) handlePayCommand(from entity.UserID, sp []string) error {
 	return nil
 }
 
-func parsePayCommand(sp []string) (to entity.UserID, amount entity.Amount, err error) {
-	n, err := strconv.Atoi(sp[0])
-	// TODO: check <@SOME_ID> or plain string
-	if err == nil {
-		// format: 500 @ktr
-		amount = entity.Amount(n)
-		to = entity.UserID(sp[1])
-		return
+func (b *SlackBot) handleClaimCommand(from entity.UserID, sp []string) error {
+	to, amount, err := parseArgs(sp[2:])
+	if err != nil {
+		return err
 	}
-
-	n, err = strconv.Atoi(sp[1])
-	if err == nil {
-		// format: @ktr 500
-		to = entity.UserID(sp[0])
-		amount = entity.Amount(n)
-		return
+	tx, err := usecase.Claim(b.repo, &usecase.ClaimParam{
+		FromID:  from,
+		ToID:    to,
+		Amount:  amount,
+		Message: "",
+	})
+	if err != nil {
+		return err
 	}
-
-	err = ErrInvalidUsage
-	return
+	b.logger.Println(tx)
+	return nil
 }
 
-func parseClaimCommand(sp []string) (to entity.UserID, amount entity.Amount, err error) {
+// TODO: use more better naming
+func parseArgs(sp []string) (to entity.UserID, amount entity.Amount, err error) {
 	n, err := strconv.Atoi(sp[0])
+	// TODO: check <@SOME_ID> or plain string
 	if err == nil {
 		// format: 500 @ktr
 		amount = entity.Amount(n)
