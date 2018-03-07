@@ -3,8 +3,6 @@ package config
 import (
 	"sync"
 
-	"github.com/GoodCodingFriends/gpay/adapter/controller"
-	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/k0kubun/pp"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -16,12 +14,25 @@ var (
 
 type Config struct {
 	Meta       *Meta
-	Controller *controller.Config
-	Entity     *entity.Config
+	Controller *Controller
+	Entity     *Entity
 }
 
 type Meta struct {
 	Debug bool `default:"true"`
+}
+
+type Entity struct {
+	BalanceLowerLimit int64 `default:"-5000"`
+}
+
+type Controller struct {
+	Slack *Slack
+}
+
+type Slack struct {
+	APIToken string
+	BotName  string `default:"gpay"`
 }
 
 var processErr error

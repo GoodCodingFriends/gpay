@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strconv"
 	"sync"
+
+	"github.com/GoodCodingFriends/gpay/config"
 )
 
 var (
@@ -29,7 +31,7 @@ func (a *Amount) UnmarshalText(text []byte) error {
 type balance struct {
 	amount Amount
 
-	conf *Config
+	conf *config.Config
 
 	mu sync.Mutex
 }
@@ -38,7 +40,7 @@ func (b *balance) checkAmount(amount Amount) error {
 	if amount == 0 {
 		return ErrZeroAmount
 	}
-	if b.amount-amount < b.conf.BalanceLowerLimit {
+	if b.amount-amount < Amount(b.conf.Entity.BalanceLowerLimit) {
 		return ErrInsufficientBalance
 	}
 	return nil

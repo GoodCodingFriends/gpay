@@ -9,7 +9,7 @@ import (
 )
 
 func NewUser(t *testing.T) *entity.User {
-	conf, err := config.Process()
+	cfg, err := config.Process()
 	require.NoError(t, err)
-	return entity.NewUser(conf.Entity, "kumiko", "omae", "omae-chan")
+	return entity.NewUser(cfg, "kumiko", "omae", "omae-chan")
 }

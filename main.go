@@ -16,7 +16,8 @@ func main() {
 		panic(err)
 	}
 	logger := log.New(os.Stdout, "[gpay] ", log.Lshortfile|log.LstdFlags)
-	os.Exit(run(controller.NewSlackBot(logger, cfg.Controller.Slack)))
+
+	os.Exit(run(controller.NewSlackBot(logger, cfg)))
 }
 
 func run(listener adapter.Listener) int {

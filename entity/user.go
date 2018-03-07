@@ -3,6 +3,7 @@ package entity
 import (
 	"errors"
 
+	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity/internal/id"
 )
 
@@ -22,7 +23,7 @@ type User struct {
 	balance     balance
 }
 
-func NewUser(conf *Config, firstName, lastName, displayName string) *User {
+func NewUser(conf *config.Config, firstName, lastName, displayName string) *User {
 	return &User{
 		ID:          UserID(id.New()),
 		FirstName:   firstName,

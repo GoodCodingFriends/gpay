@@ -3,6 +3,7 @@ package entity
 import (
 	"testing"
 
+	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity/internal/id"
 	"github.com/stretchr/testify/require"
 )
@@ -14,8 +15,10 @@ func newUser() *User {
 		LastName:    "omae",
 		DisplayName: "omae-chan",
 		balance: balance{
-			conf: &Config{
-				BalanceLowerLimit: -5000,
+			conf: &config.Config{
+				Entity: &config.Entity{
+					BalanceLowerLimit: -5000,
+				},
 			},
 		},
 	}
