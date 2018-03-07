@@ -8,17 +8,13 @@ import (
 )
 
 type PayParam struct {
-	FromID, ToID entity.UserID
-	Amount       entity.Amount
-	Message      string
+	From, To *entity.User
+	Amount   entity.Amount
+	Message  string
 }
 
 func Pay(repo *repository.Repository, p *PayParam) (*entity.Transaction, error) {
-	from, to, err := findBothUsers(repo, p.FromID, p.ToID)
-	if err != nil {
-		return nil, err
-	}
-
+	from, to := p.From, p.To
 	result, err := from.Pay(to, p.Amount, p.Message)
 	if err != nil {
 		return nil, err

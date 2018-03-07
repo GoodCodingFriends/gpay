@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/GoodCodingFriends/gpay/config"
-	"github.com/GoodCodingFriends/gpay/entity/internal/id"
 )
 
 var (
@@ -12,6 +11,10 @@ var (
 	ErrWrongDestination = errors.New("destination user is wrong")
 	ErrCompletedInvoice = errors.New("the invoice is already completed")
 )
+
+type UserIDGenerator interface {
+	Generate() UserID
+}
 
 type UserID string
 
@@ -23,9 +26,9 @@ type User struct {
 	balance     balance
 }
 
-func NewUser(conf *config.Config, firstName, lastName, displayName string) *User {
+func NewUser(conf *config.Config, generator UserIDGenerator, firstName, lastName, displayName string) *User {
 	return &User{
-		ID:          UserID(id.New()),
+		ID:          generator.Generate(),
 		FirstName:   firstName,
 		LastName:    lastName,
 		DisplayName: displayName,

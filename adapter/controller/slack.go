@@ -1,15 +1,18 @@
 package controller
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
 	"strings"
 
+	"github.com/GoodCodingFriends/gpay/adapter"
 	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository"
 	"github.com/GoodCodingFriends/gpay/usecase"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/nlopes/slack"
 )
 
@@ -89,17 +92,17 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	default:
 		return ErrUnknownCommand
 	}
-	return nil
 }
 
-func (b *SlackBot) handlePayCommand(from entity.UserID, sp []string) error {
-	to, amount, err := parseArgs(sp)
+func (b *SlackBot) handlePayCommand(fromID entity.UserID, sp []string) error {
+	toID, amount, err := parseArgs(sp)
 	if err != nil {
 		return err
 	}
+	from, to, err := b.withUserCreation(usecase.FindBothUsers(b.repo, fromID, toID))
 	tx, err := usecase.Pay(b.repo, &usecase.PayParam{
-		FromID:  from,
-		ToID:    to,
+		From:    from,
+		To:      to,
 		Amount:  amount,
 		Message: "",
 	})
@@ -111,14 +114,15 @@ func (b *SlackBot) handlePayCommand(from entity.UserID, sp []string) error {
 	return nil
 }
 
-func (b *SlackBot) handleClaimCommand(from entity.UserID, sp []string) error {
-	to, amount, err := parseArgs(sp[2:])
+func (b *SlackBot) handleClaimCommand(fromID entity.UserID, sp []string) error {
+	toID, amount, err := parseArgs(sp[2:])
 	if err != nil {
 		return err
 	}
+	from, to, err := b.withUserCreation(usecase.FindBothUsers(b.repo, fromID, toID))
 	tx, err := usecase.Claim(b.repo, &usecase.ClaimParam{
-		FromID:  from,
-		ToID:    to,
+		From:    from,
+		To:      to,
 		Amount:  amount,
 		Message: "",
 	})
@@ -127,6 +131,42 @@ func (b *SlackBot) handleClaimCommand(from entity.UserID, sp []string) error {
 	}
 	b.logger.Println(tx)
 	return nil
+}
+
+func (b *SlackBot) withUserCreation(from, to *entity.User, baseErr error) (*entity.User, *entity.User, error) {
+	if baseErr != nil {
+		return nil, nil, baseErr
+	}
+
+	merr, ok := baseErr.(*multierror.Error)
+	if !ok {
+		return nil, nil, baseErr
+	}
+
+	users := make([]*entity.User, 0, len(merr.Errors))
+	for _, err := range merr.Errors {
+		uerr, ok := err.(usecase.ErrUserNotFound)
+		if !ok {
+			return nil, nil, baseErr
+		}
+
+		// TODO: first, lastname, display name
+		g := &adapter.SlackUserIDGenerator{UserID: uerr.ID}
+		u := entity.NewUser(b.cfg, g, "", "", "")
+		users = append(users, u)
+
+		if from != nil && from.ID == uerr.ID {
+			from = u
+		} else if to != nil && to.ID == uerr.ID {
+			to = u
+		}
+	}
+
+	if err := b.repo.User.StoreAll(context.Background(), users); err != nil {
+		return nil, nil, err
+	}
+
+	return from, to, nil
 }
 
 // TODO: use more better naming

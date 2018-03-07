@@ -9,17 +9,13 @@ import (
 )
 
 type ClaimParam struct {
-	FromID, ToID entity.UserID
-	Amount       entity.Amount
-	Message      string
+	From, To *entity.User
+	Amount   entity.Amount
+	Message  string
 }
 
 func Claim(repo *repository.Repository, p *ClaimParam) (*entity.Invoice, error) {
-	from, to, err := findBothUsers(repo, p.FromID, p.ToID)
-	if err != nil {
-		return nil, err
-	}
-
+	from, to := p.From, p.To
 	invoice, err := from.Claim(to, p.Amount, p.Message)
 	if err != nil {
 		return nil, err
@@ -43,7 +39,7 @@ func AcceptInvoice(repo *repository.Repository, p *AcceptInvoiceParam) (*entity.
 		return nil, err
 	}
 
-	from, to, err := findBothUsers(repo, invoice.FromID, invoice.ToID)
+	from, to, err := FindBothUsers(repo, invoice.FromID, invoice.ToID)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +91,7 @@ func RejectInvoice(repo *repository.Repository, p *RejectInvoiceParam) (*entity.
 		return nil, err
 	}
 
-	from, to, err := findBothUsers(repo, invoice.FromID, invoice.ToID)
+	from, to, err := FindBothUsers(repo, invoice.FromID, invoice.ToID)
 	if err != nil {
 		return nil, err
 	}
@@ -137,15 +133,25 @@ func RejectInvoice(repo *repository.Repository, p *RejectInvoiceParam) (*entity.
 	return tx, err
 }
 
-func findBothUsers(repo *repository.Repository, fromID, toID entity.UserID) (*entity.User, *entity.User, error) {
+// ErrUserNotFound has UserID which identifies the missing user
+type ErrUserNotFound struct {
+	err error
+	ID  entity.UserID
+}
+
+func (e ErrUserNotFound) Error() string {
+	return e.err.Error()
+}
+
+func FindBothUsers(repo *repository.Repository, fromID, toID entity.UserID) (*entity.User, *entity.User, error) {
 	var result error
 	from, err := repo.User.FindByID(context.Background(), fromID)
 	if err != nil {
-		result = multierror.Append(result, err)
+		result = multierror.Append(result, ErrUserNotFound{err: err, ID: fromID})
 	}
 	to, err := repo.User.FindByID(context.Background(), toID)
 	if err != nil {
-		result = multierror.Append(result, err)
+		result = multierror.Append(result, ErrUserNotFound{err: err, ID: toID})
 	}
 	return from, to, result
 }

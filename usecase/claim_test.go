@@ -15,8 +15,8 @@ func TestClaim(t *testing.T) {
 		from, to := createUser(t, repo), createUser(t, repo)
 		amount := entity.Amount(300)
 		p := &ClaimParam{
-			FromID:  from.ID,
-			ToID:    to.ID,
+			From:    from,
+			To:      to,
 			Amount:  amount,
 			Message: "msg",
 		}
