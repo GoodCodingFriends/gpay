@@ -5,6 +5,7 @@ import (
 
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository"
+	multierror "github.com/hashicorp/go-multierror"
 )
 
 type ClaimParam struct {
@@ -137,13 +138,14 @@ func RejectInvoice(repo *repository.Repository, p *RejectInvoiceParam) (*entity.
 }
 
 func findBothUsers(repo *repository.Repository, fromID, toID entity.UserID) (*entity.User, *entity.User, error) {
+	var result error
 	from, err := repo.User.FindByID(context.Background(), fromID)
 	if err != nil {
-		return nil, nil, err
+		result = multierror.Append(result, err)
 	}
 	to, err := repo.User.FindByID(context.Background(), toID)
 	if err != nil {
-		return nil, nil, err
+		result = multierror.Append(result, err)
 	}
-	return from, to, nil
+	return from, to, result
 }
