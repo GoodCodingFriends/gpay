@@ -9,7 +9,6 @@ import (
 	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository"
-	"github.com/GoodCodingFriends/gpay/repository/repositorytest"
 	"github.com/GoodCodingFriends/gpay/usecase"
 	"github.com/nlopes/slack"
 )
@@ -31,10 +30,9 @@ type SlackBot struct {
 	repo   *repository.Repository
 }
 
-func NewSlackBot(logger *log.Logger, cfg *config.Config) *SlackBot {
+func NewSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Repository) *SlackBot {
 	l := slack.New(cfg.Controller.Slack.APIToken)
 	slack.SetLogger(logger)
-	repo := repositorytest.NewInMemory()
 	return &SlackBot{
 		logger: logger,
 		cfg:    cfg,
@@ -77,6 +75,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	sp := strings.Split(e.Text, " ")
 	if len(sp) != 4 {
 		// show usage
+		return ErrInvalidUsage
 	}
 
 	cmdType := sp[1]
@@ -84,20 +83,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 
 	switch cmdType {
 	case cmdTypePay:
-		to, amount, err := parsePayCommand(sp[2:])
-		if err != nil {
-			return err
-		}
-		tx, err := usecase.Pay(b.repo, &usecase.PayParam{
-			FromID:  from,
-			ToID:    to,
-			Amount:  amount,
-			Message: "",
-		})
-		if err != nil {
-			return err
-		}
-		b.logger.Println(tx)
+		return b.handlePayCommand(from, sp[2:])
 	case cmdTypeClaim:
 		to, amount, err := parsePayCommand(sp[2:])
 		if err != nil {
@@ -116,6 +102,25 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	default:
 		return ErrUnknownCommand
 	}
+	return nil
+}
+
+func (b *SlackBot) handlePayCommand(from entity.UserID, sp []string) error {
+	to, amount, err := parsePayCommand(sp)
+	if err != nil {
+		return err
+	}
+	tx, err := usecase.Pay(b.repo, &usecase.PayParam{
+		FromID:  from,
+		ToID:    to,
+		Amount:  amount,
+		Message: "",
+	})
+	if err != nil {
+		return err
+	}
+	// TODO: handle
+	b.logger.Println(tx)
 	return nil
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/GoodCodingFriends/gpay/adapter"
 	"github.com/GoodCodingFriends/gpay/adapter/controller"
 	"github.com/GoodCodingFriends/gpay/config"
+	"github.com/GoodCodingFriends/gpay/repository/repositorytest"
 )
 
 func main() {
@@ -15,9 +16,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	logger := log.New(os.Stdout, "[gpay] ", log.Lshortfile|log.LstdFlags)
 
-	os.Exit(run(controller.NewSlackBot(logger, cfg)))
+	logger := log.New(os.Stdout, "[gpay] ", log.Lshortfile|log.LstdFlags)
+	repo := repositorytest.NewInMemory()
+
+	os.Exit(run(controller.NewSlackBot(logger, cfg, repo)))
 }
 
 func run(listener adapter.Listener) int {
