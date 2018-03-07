@@ -17,9 +17,9 @@ gotest:
 	@go test -race -v $(shell glide novendor)
 
 golint:
-	# TODO: refactor
+	@# TODO: refactor
 	@$(eval out := $(shell golint $(shell glide novendor) | grep -v 'have comment'))
-	@test -z "$(out)" >/dev/null 2>&1 || echo -e $(out) && false
+	@test -z "$(out)" >/dev/null 2>&1 || (echo -e $(out) && false)
 
 govet:
 	@go vet $(shell go list $(shell glide novendor) | grep -v repositorytest)

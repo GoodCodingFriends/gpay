@@ -8,8 +8,10 @@ import (
 	"github.com/GoodCodingFriends/gpay/repository"
 )
 
+type contextKey string
+
 var (
-	txFlagKey = "in_transaction"
+	txFlagKey contextKey = "in_transaction"
 )
 
 type inMemoryUserRepository struct {
