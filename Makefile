@@ -2,27 +2,29 @@ SHELL := /bin/bash
 
 glide:
 ifeq ($(shell which glide 2>/dev/null),)
-	curl https://glide.sh/get | sh
+	@curl https://glide.sh/get | sh
 endif
 
 deps: glide
-	glide install
+	@glide install
 
 build: deps
-	go build 
+	@go build 
 
 test: gotest golint govet
 
 gotest:
-	go test -race -v $(shell glide novendor)
+	@go test -race -v $(shell glide novendor)
 
 golint:
-	golint $(shell glide novendor)
+	# TODO: refactor
+	@$(eval out := $(shell golint $(shell glide novendor) | grep -v 'have comment'))
+	@test -z "$(out)" >/dev/null 2>&1 || echo -e $(out) && false
 
 govet:
-	go vet $(shell glide novendor)
+	@go vet $(shell go list $(shell glide novendor) | grep -v repositorytest)
 
 coverage: 
-	go tool cover -html=coverage.out
+	@go tool cover -html=coverage.out
 
 .PHONY: glide deps build test gotest golint govet coverage
