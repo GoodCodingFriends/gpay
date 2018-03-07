@@ -1,0 +1,17 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/GoodCodingFriends/gpay
+    docker:
+      - image: ktr0731/circleci-gpay
+
+    steps:
+      - checkout
+
+      - run:
+          name: build
+          command: make build
+
+      - run:
+          name: test
+          command: make test
