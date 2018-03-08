@@ -8,4 +8,5 @@ var (
 	}
 	balanceMessage      = "今の残高は %d 円で、あと %d 円分つかえると思う"
 	balanceLimitMessage = "今の残高は %d 円だからもう使えないよ。お金返してあげなよ"
+	claimMessage        = "<@%s> から %d 円分を請求されたよ"
 )

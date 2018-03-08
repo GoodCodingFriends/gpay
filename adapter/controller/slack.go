@@ -169,12 +169,12 @@ func (b *SlackBot) handlePayCommand(e *slack.MessageEvent, fromID entity.UserID,
 
 func (b *SlackBot) handleClaimCommand(e *slack.MessageEvent, fromID entity.UserID, sp []string) error {
 	p := &parser{idToSlackUser: b.idToSlackUser}
-	toID, amount, err := p.parse(sp[2:])
+	toID, amount, err := p.parse(sp)
 	if err != nil {
 		return err
 	}
 	from, to, err := usecase.FindBothUsersWithUserCreation(b.cfg, b.repo, fromID, toID)
-	tx, err := usecase.Claim(b.repo, &usecase.ClaimParam{
+	invoice, err := usecase.Claim(b.repo, &usecase.ClaimParam{
 		From:    from,
 		To:      to,
 		Amount:  amount,
@@ -183,7 +183,29 @@ func (b *SlackBot) handleClaimCommand(e *slack.MessageEvent, fromID entity.UserI
 	if err != nil {
 		return err
 	}
-	b.logger.Println(tx)
+
+	msg := fmt.Sprintf("<@%s>", to.ID)
+	btns := slack.Attachment{
+		Text: fmt.Sprintf(claimMessage, from.ID, amount),
+		Actions: []slack.AttachmentAction{
+			{
+				Name:  "accept",
+				Type:  "button",
+				Text:  "支払う",
+				Style: "primary",
+			},
+			{
+				Name:  "reject",
+				Type:  "button",
+				Text:  "拒否",
+				Style: "danger",
+			},
+		},
+	}
+
+	b.postMessageWithAttachment(e, msg, btns)
+
+	b.logger.Printf("%#v\n", invoice)
 	return nil
 }
 
@@ -223,6 +245,14 @@ func (b *SlackBot) postMessage(e *slack.MessageEvent, msg string) {
 	b.client.PostMessage(e.Msg.Channel, msg, slack.PostMessageParameters{
 		Username: b.cfg.Controller.Slack.DisplayName,
 		AsUser:   true,
+	})
+}
+
+func (b *SlackBot) postMessageWithAttachment(e *slack.MessageEvent, msg string, attachments ...slack.Attachment) {
+	b.client.PostMessage(e.Msg.Channel, msg, slack.PostMessageParameters{
+		Username:    b.cfg.Controller.Slack.DisplayName,
+		AsUser:      true,
+		Attachments: attachments,
 	})
 }
 

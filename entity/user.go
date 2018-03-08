@@ -52,9 +52,9 @@ func (u *User) Pay(to *User, amount Amount, message string) (*Transaction, error
 }
 
 func (u *User) Claim(to *User, amount Amount, message string) (*Invoice, error) {
-	if u.ID == to.ID {
-		return nil, ErrSameUser
-	}
+	// if u.ID == to.ID {
+	// 	return nil, ErrSameUser
+	// }
 	if err := to.balance.checkAmount(amount); err != nil {
 		return nil, err
 	}
