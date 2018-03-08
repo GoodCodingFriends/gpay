@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/GoodCodingFriends/gpay/config"
+	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository/repositorytest"
 	"github.com/nlopes/slack"
 	"github.com/stretchr/testify/require"
@@ -19,7 +20,12 @@ func setupSlackBot(t *testing.T) *SlackBot {
 
 	repo := repositorytest.NewInMemory()
 
-	return NewSlackBot(logger, cfg, repo)
+	bot, err := NewSlackBot(logger, cfg, repo)
+	require.NoError(t, err)
+
+	bot.disableAPIRequest = true
+
+	return bot
 }
 
 func TestSlackBot_handleMessageEvent(t *testing.T) {
@@ -51,7 +57,7 @@ func TestSlackBot_handleMessageEvent(t *testing.T) {
 	})
 }
 
-func Test_parseArgs(t *testing.T) {
+func Test_parer_parse(t *testing.T) {
 	cases := []struct {
 		in     string
 		hasErr bool
@@ -63,10 +69,38 @@ func Test_parseArgs(t *testing.T) {
 		{"ktr 50o", true},
 	}
 
+	p := &parser{}
 	for _, c := range cases {
-		_, _, err := parseArgs(strings.Split(c.in, " "))
+		_, _, err := p.parse(strings.Split(c.in, " "))
 		if c.hasErr {
 			require.Error(t, err)
 		}
+	}
+}
+
+func Test_parser_normalizeUserID(t *testing.T) {
+	cases := []struct {
+		in       string
+		expected entity.UserID
+		hasErr   bool
+	}{
+		{in: "asuka", hasErr: true},
+		{in: "<@asuka>", expected: entity.UserID("asuka")},
+	}
+
+	p := &parser{
+		idToSlackUser: map[string]slack.User{
+			"asuka": slack.User{
+				ID: "asuka_id",
+			},
+		},
+	}
+	for _, c := range cases {
+		id, err := p.normalizeUserID(c.in)
+		if c.hasErr {
+			require.Error(t, err)
+			continue
+		}
+		require.Equal(t, c.expected, id)
 	}
 }

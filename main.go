@@ -20,7 +20,11 @@ func main() {
 	logger := log.New(os.Stdout, "[gpay] ", log.Lshortfile|log.LstdFlags)
 	repo := repositorytest.NewInMemory()
 
-	os.Exit(run(controller.NewSlackBot(logger, cfg, repo)))
+	bot, err := controller.NewSlackBot(logger, cfg, repo)
+	if err != nil {
+		panic(err)
+	}
+	os.Exit(run(bot))
 }
 
 func run(listener adapter.Listener) int {

@@ -21,6 +21,7 @@ func (e errUserNotFound) Error() string {
 
 func FindBothUsers(repo *repository.Repository, fromID, toID entity.UserID) (*entity.User, *entity.User, error) {
 	var result error
+	var err error
 	from, err := repo.User.FindByID(context.Background(), fromID)
 	if err != nil {
 		result = multierror.Append(result, errUserNotFound{err: err, id: fromID})
@@ -57,9 +58,12 @@ func FindBothUsersWithUserCreation(cfg *config.Config, repo *repository.Reposito
 		u := entity.NewUser(cfg, uerr.id, "", "", "")
 		users = append(users, u)
 
+		// don't use "else if" because user can send hisself
+		// note that the validation will be doing after that
 		if fromID == uerr.id {
 			from = u
-		} else if toID == uerr.id {
+		}
+		if toID == uerr.id {
 			to = u
 		}
 	}
