@@ -20,7 +20,7 @@ func setupSlackBot(t *testing.T) *SlackBot {
 
 	repo := repositorytest.NewInMemory()
 
-	bot, err := NewSlackBot(logger, cfg, repo)
+	bot, err := newSlackBot(logger, cfg, repo)
 	require.NoError(t, err)
 
 	bot.disableAPIRequest = true
@@ -35,13 +35,13 @@ func TestSlackBot_handleMessageEvent(t *testing.T) {
 	t.Run("not gpay command", func(t *testing.T) {
 		e.Text = "foo"
 		err := s.handleMessageEvent(e)
-		require.NoError(t, err)
+		require.Equal(t, ErrNotGPAYCommand, err)
 	})
 
 	t.Run("len(sp) is not 4", func(t *testing.T) {
 		e.Text = "gpay foo"
 		err := s.handleMessageEvent(e)
-		require.Equal(t, ErrInvalidUsage, err)
+		require.Equal(t, ErrUnknownCommand, err)
 	})
 
 	t.Run("unknown command", func(t *testing.T) {

@@ -50,14 +50,21 @@ type SlackBot struct {
 	idToSlackUser map[string]slack.User
 }
 
-func NewSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Repository) (*SlackBot, error) {
+func newSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Repository) (*SlackBot, error) {
 	client := slack.New(cfg.Controller.Slack.APIToken)
 	slack.SetLogger(logger)
-	bot := &SlackBot{
+	return &SlackBot{
 		logger: logger,
 		cfg:    cfg,
 		client: client,
 		repo:   repo,
+	}, nil
+}
+
+func NewSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Repository) (*SlackBot, error) {
+	bot, err := newSlackBot(logger, cfg, repo)
+	if err != nil {
+		return nil, err
 	}
 	return bot, bot.updateSlackUsers()
 }
