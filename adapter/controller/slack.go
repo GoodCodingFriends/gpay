@@ -1,8 +1,11 @@
 package controller
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"log"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -15,8 +18,9 @@ import (
 )
 
 const (
-	cmdTypePay   = "pay"
-	cmdTypeClaim = "claim"
+	cmdTypePay     = "pay"
+	cmdTypeClaim   = "claim"
+	cmdTypeBalance = "balance"
 )
 
 var (
@@ -67,19 +71,10 @@ func (b *SlackBot) Listen() error {
 
 			if err != nil {
 				b.logger.Printf("handleMessageEvent: %s", err)
-				if m, ok := errToSlackMessage[err]; ok {
-					b.client.PostMessage(e.Msg.Channel, m, slack.PostMessageParameters{
-						Username: "gPAY",
-						AsUser:   true,
-					})
+				if msg, ok := errToSlackMessage[err]; ok {
+					b.postMessage(e, msg)
 				}
 				continue
-			}
-
-			// done as a reaction
-			ref := slack.NewRefToMessage(e.Msg.Channel, e.Msg.Timestamp)
-			if err := b.client.AddReaction(b.cfg.Controller.Slack.DoneEmoji, ref); err != nil {
-				b.logger.Printf("handleMessageEvent: %s", err)
 			}
 		}
 	}
@@ -125,7 +120,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	}
 
 	sp := strings.Split(e.Text, " ")
-	if len(sp) != 4 {
+	if len(sp) < 2 {
 		// show usage
 		return ErrInvalidUsage
 	}
@@ -135,15 +130,23 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 
 	switch cmdType {
 	case cmdTypePay:
-		return b.handlePayCommand(from, sp[2:])
+		if len(sp) != 4 {
+			return ErrInvalidUsage
+		}
+		return b.handlePayCommand(e, from, sp[2:])
 	case cmdTypeClaim:
-		return b.handleClaimCommand(from, sp[2:])
+		if len(sp) != 4 {
+			return ErrInvalidUsage
+		}
+		return b.handleClaimCommand(e, from, sp[2:])
+	case cmdTypeBalance:
+		return b.handleBalanceCommand(e, from)
 	default:
 		return ErrUnknownCommand
 	}
 }
 
-func (b *SlackBot) handlePayCommand(fromID entity.UserID, sp []string) error {
+func (b *SlackBot) handlePayCommand(e *slack.MessageEvent, fromID entity.UserID, sp []string) error {
 	p := &parser{idToSlackUser: b.idToSlackUser}
 	toID, amount, err := p.parse(sp)
 	if err != nil {
@@ -160,10 +163,11 @@ func (b *SlackBot) handlePayCommand(fromID entity.UserID, sp []string) error {
 		return err
 	}
 	b.logger.Printf("%#v\n", tx)
+	b.addDoneReaction(e)
 	return nil
 }
 
-func (b *SlackBot) handleClaimCommand(fromID entity.UserID, sp []string) error {
+func (b *SlackBot) handleClaimCommand(e *slack.MessageEvent, fromID entity.UserID, sp []string) error {
 	p := &parser{idToSlackUser: b.idToSlackUser}
 	toID, amount, err := p.parse(sp[2:])
 	if err != nil {
@@ -181,6 +185,45 @@ func (b *SlackBot) handleClaimCommand(fromID entity.UserID, sp []string) error {
 	}
 	b.logger.Println(tx)
 	return nil
+}
+
+func (b *SlackBot) handleBalanceCommand(e *slack.MessageEvent, fromID entity.UserID) error {
+	u, err := b.repo.User.FindByID(context.Background(), fromID)
+	if err != nil {
+		return err
+	}
+
+	amount := u.BalanceAmount()
+	var msg string
+	if amount == entity.Amount(b.cfg.Entity.BalanceLowerLimit) {
+		msg = fmt.Sprintf(
+			balanceLimitMessage,
+			amount,
+		)
+	} else {
+		msg = fmt.Sprintf(
+			balanceMessage,
+			amount,
+			int64(math.Abs(float64(b.cfg.Entity.BalanceLowerLimit-int64(amount)))),
+		)
+	}
+	b.postMessage(e, msg)
+	return nil
+}
+
+func (b *SlackBot) addDoneReaction(e *slack.MessageEvent) {
+	// done as a reaction
+	ref := slack.NewRefToMessage(e.Msg.Channel, e.Msg.Timestamp)
+	if err := b.client.AddReaction(b.cfg.Controller.Slack.DoneEmoji, ref); err != nil {
+		b.logger.Printf("handleMessageEvent: %s", err)
+	}
+}
+
+func (b *SlackBot) postMessage(e *slack.MessageEvent, msg string) {
+	b.client.PostMessage(e.Msg.Channel, msg, slack.PostMessageParameters{
+		Username: b.cfg.Controller.Slack.DisplayName,
+		AsUser:   true,
+	})
 }
 
 type parser struct {

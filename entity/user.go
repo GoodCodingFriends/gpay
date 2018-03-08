@@ -77,3 +77,7 @@ func (u *User) AcceptInvoice(invoice *Invoice, from *User) (*Transaction, error)
 
 	return newTransaction(TxTypeClaim, from.ID, u.ID, invoice.amount, invoice.message), nil
 }
+
+func (u *User) BalanceAmount() Amount {
+	return u.balance.amount
+}
