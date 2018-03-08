@@ -4,9 +4,17 @@ import "github.com/GoodCodingFriends/gpay/entity/internal/id"
 
 type InvoiceID string
 
+type Status int
+
+const (
+	StatusPending  = 0
+	StatusAccepted = 1
+	StatusRejected = 2
+)
+
 type Invoice struct {
 	ID           InvoiceID
-	IsCompleted  bool
+	Status       Status
 	FromID, ToID UserID
 	amount       Amount
 	message      string

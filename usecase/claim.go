@@ -66,7 +66,6 @@ func AcceptInvoice(repo *repository.Repository, p *AcceptInvoiceParam) (*entity.
 		return nil, err
 	}
 
-	invoice.IsCompleted = true
 	err = dbtx.Invoice.Store(ctx, invoice)
 	if err != nil {
 		return nil, err
@@ -77,32 +76,32 @@ func AcceptInvoice(repo *repository.Repository, p *AcceptInvoiceParam) (*entity.
 		return nil, err
 	}
 
-	return tx, err
+	return tx, dbtx.Commit()
 }
 
 type RejectInvoiceParam struct {
 	InvoiceID entity.InvoiceID
 }
 
-func RejectInvoice(repo *repository.Repository, p *RejectInvoiceParam) (*entity.Transaction, error) {
+func RejectInvoice(repo *repository.Repository, p *RejectInvoiceParam) error {
 	invoice, err := repo.Invoice.FindByID(context.Background(), p.InvoiceID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	from, to, err := FindBothUsers(repo, invoice.FromID, invoice.ToID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	tx, err := to.AcceptInvoice(invoice, from)
+	err = to.RejectInvoice(invoice, from)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	dbtx, ctx, err := repo.BeginTx(context.Background())
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer func() {
 		if err := recover(); err != nil {
@@ -115,19 +114,13 @@ func RejectInvoice(repo *repository.Repository, p *RejectInvoiceParam) (*entity.
 
 	err = dbtx.User.StoreAll(ctx, []*entity.User{from, to})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	invoice.IsCompleted = true
 	err = dbtx.Invoice.Store(ctx, invoice)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = dbtx.Transaction.Store(ctx, tx)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx, err
+	return dbtx.Commit()
 }

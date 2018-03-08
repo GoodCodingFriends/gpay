@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -21,6 +22,9 @@ const (
 	cmdTypePay     = "pay"
 	cmdTypeClaim   = "claim"
 	cmdTypeBalance = "balance"
+
+	actionNameAccept = "accept"
+	actionNameReject = "reject"
 )
 
 var (
@@ -59,6 +63,8 @@ func NewSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Reposi
 }
 
 func (b *SlackBot) Listen() error {
+	go b.startInteractionServer()
+
 	rtm := b.client.NewRTM()
 	go rtm.ManageConnection()
 	for m := range rtm.IncomingEvents {
@@ -82,6 +88,19 @@ func (b *SlackBot) Listen() error {
 }
 
 func (b *SlackBot) Stop() error {
+	return nil
+}
+
+func (b *SlackBot) startInteractionServer() error {
+	b.logger.Println("start interaction server")
+	http.Handle("/interaction", &interactionHandler{
+		logger:            b.logger,
+		repo:              b.repo,
+		verificationToken: b.cfg.Controller.Slack.VerificationToken,
+	})
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -186,16 +205,17 @@ func (b *SlackBot) handleClaimCommand(e *slack.MessageEvent, fromID entity.UserI
 
 	msg := fmt.Sprintf("<@%s>", to.ID)
 	btns := slack.Attachment{
-		Text: fmt.Sprintf(claimMessage, from.ID, amount),
+		CallbackID: string(invoice.ID),
+		Text:       fmt.Sprintf(claimMessage, from.ID, amount),
 		Actions: []slack.AttachmentAction{
 			{
-				Name:  "accept",
+				Name:  actionNameAccept,
 				Type:  "button",
 				Text:  "支払う",
 				Style: "primary",
 			},
 			{
-				Name:  "reject",
+				Name:  actionNameReject,
 				Type:  "button",
 				Text:  "拒否",
 				Style: "danger",

@@ -67,15 +67,31 @@ func (u *User) AcceptInvoice(invoice *Invoice, from *User) (*Transaction, error)
 		return nil, ErrWrongDestination
 	}
 
-	if invoice.IsCompleted {
+	if invoice.Status != StatusPending {
 		return nil, ErrCompletedInvoice
 	}
+
+	invoice.Status = StatusAccepted
 
 	if err := send(u, from, invoice.amount); err != nil {
 		return nil, err
 	}
 
 	return newTransaction(TxTypeClaim, from.ID, u.ID, invoice.amount, invoice.message), nil
+}
+
+func (u *User) RejectInvoice(invoice *Invoice, from *User) error {
+	if invoice.ToID != u.ID {
+		return ErrWrongDestination
+	}
+
+	if invoice.Status != StatusPending {
+		return ErrCompletedInvoice
+	}
+
+	invoice.Status = StatusRejected
+
+	return nil
 }
 
 func (u *User) BalanceAmount() Amount {
