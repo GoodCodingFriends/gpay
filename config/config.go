@@ -31,8 +31,9 @@ type Controller struct {
 }
 
 type Slack struct {
-	APIToken string
-	BotName  string `default:"gpay"`
+	APIToken  string
+	BotName   string `default:"gpay"`
+	DoneEmoji string `default:"sushi"`
 }
 
 var processErr error

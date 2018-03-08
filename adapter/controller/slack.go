@@ -20,8 +20,11 @@ const (
 )
 
 var (
+	ErrNotGPAYCommand = errors.New("not gpay command, ignore")
+
 	ErrUnknownCommand = errors.New("unknown command")
 	ErrInvalidUsage   = errors.New("invalid usage")
+	ErrInvalidUserID  = errors.New("invalid user id")
 
 	userIDPattern = regexp.MustCompile(`^<@(.*)>$`)
 )
@@ -57,7 +60,25 @@ func (b *SlackBot) Listen() error {
 	for m := range rtm.IncomingEvents {
 		switch e := m.Data.(type) {
 		case *slack.MessageEvent:
-			if err := b.handleMessageEvent(e); err != nil {
+			err := b.handleMessageEvent(e)
+			if err == ErrNotGPAYCommand {
+				continue
+			}
+
+			if err != nil {
+				b.logger.Printf("handleMessageEvent: %s", err)
+				if m, ok := errToSlackMessage[err]; ok {
+					b.client.PostMessage(e.Msg.Channel, m, slack.PostMessageParameters{
+						Username: "gPAY",
+						AsUser:   true,
+					})
+				}
+				continue
+			}
+
+			// done as a reaction
+			ref := slack.NewRefToMessage(e.Msg.Channel, e.Msg.Timestamp)
+			if err := b.client.AddReaction(b.cfg.Controller.Slack.DoneEmoji, ref); err != nil {
 				b.logger.Printf("handleMessageEvent: %s", err)
 			}
 		}
@@ -69,7 +90,6 @@ func (b *SlackBot) Stop() error {
 	return nil
 }
 
-// not used yet
 func (b *SlackBot) updateSlackUsers() error {
 	b.idToSlackUser = map[string]slack.User{}
 	if b.disableAPIRequest {
@@ -101,7 +121,7 @@ func (b *SlackBot) updateSlackUsers() error {
 func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	if !strings.HasPrefix(e.Text, b.cfg.Controller.Slack.BotName) {
 		b.logger.Println("not gpay command, ignore")
-		return nil
+		return ErrNotGPAYCommand
 	}
 
 	sp := strings.Split(e.Text, " ")
@@ -139,7 +159,6 @@ func (b *SlackBot) handlePayCommand(fromID entity.UserID, sp []string) error {
 	if err != nil {
 		return err
 	}
-	// TODO: handle
 	b.logger.Printf("%#v\n", tx)
 	return nil
 }
@@ -168,10 +187,8 @@ type parser struct {
 	idToSlackUser map[string]slack.User
 }
 
-// TODO: use more better naming
 func (p *parser) parse(args []string) (to entity.UserID, amount entity.Amount, err error) {
 	n, err := strconv.Atoi(args[0])
-	// TODO: check <@SOME_ID> or plain string
 	if err == nil {
 		// format: 500 @ktr
 		amount = entity.Amount(n)
@@ -200,9 +217,9 @@ func (p *parser) parse(args []string) (to entity.UserID, amount entity.Amount, e
 func (p *parser) normalizeUserID(s string) (entity.UserID, error) {
 	res := userIDPattern.FindStringSubmatch(s)
 	if len(res) == 2 {
-		if _, ok := p.idToSlackUser[res[1]]; ok {
-			return entity.UserID(res[1]), nil
-		}
+		// if _, ok := p.idToSlackUser[res[1]]; ok {
+		return entity.UserID(res[1]), nil
+		// }
 	}
-	return entity.UserID(""), errors.New("invalid form")
+	return entity.UserID(""), ErrInvalidUserID
 }
