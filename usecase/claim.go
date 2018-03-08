@@ -5,7 +5,6 @@ import (
 
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository"
-	multierror "github.com/hashicorp/go-multierror"
 )
 
 type ClaimParam struct {
@@ -131,27 +130,4 @@ func RejectInvoice(repo *repository.Repository, p *RejectInvoiceParam) (*entity.
 	}
 
 	return tx, err
-}
-
-// ErrUserNotFound has UserID which identifies the missing user
-type ErrUserNotFound struct {
-	err error
-	ID  entity.UserID
-}
-
-func (e ErrUserNotFound) Error() string {
-	return e.err.Error()
-}
-
-func FindBothUsers(repo *repository.Repository, fromID, toID entity.UserID) (*entity.User, *entity.User, error) {
-	var result error
-	from, err := repo.User.FindByID(context.Background(), fromID)
-	if err != nil {
-		result = multierror.Append(result, ErrUserNotFound{err: err, ID: fromID})
-	}
-	to, err := repo.User.FindByID(context.Background(), toID)
-	if err != nil {
-		result = multierror.Append(result, ErrUserNotFound{err: err, ID: toID})
-	}
-	return from, to, result
 }

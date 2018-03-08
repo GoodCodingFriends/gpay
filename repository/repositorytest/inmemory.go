@@ -29,6 +29,22 @@ func (r *inMemoryUserRepository) FindByID(ctx context.Context, id entity.UserID)
 	return &v, nil
 }
 
+func (r *inMemoryUserRepository) FindAll(ctx context.Context) ([]*entity.User, error) {
+	var users []*entity.User
+	var err error
+	r.m.Range(func(k, v interface{}) bool {
+		var u *entity.User
+		id := k.(entity.UserID)
+		u, err = r.FindByID(ctx, id)
+		if err != nil {
+			return false
+		}
+		users = append(users, u)
+		return true
+	})
+	return users, err
+}
+
 func (r *inMemoryUserRepository) Store(ctx context.Context, user *entity.User) error {
 	store(ctx, &r.m, &r.uncommitted, user.ID, *user)
 	return nil

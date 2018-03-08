@@ -18,6 +18,5 @@ func (g *generator) Generate() entity.UserID {
 func NewUser(t *testing.T) *entity.User {
 	cfg, err := config.Process()
 	require.NoError(t, err)
-	g := &generator{}
-	return entity.NewUser(cfg, g, "kumiko", "omae", "omae-chan")
+	return entity.NewUser(cfg, entity.UserID(id.New()), "kumiko", "omae", "omae-chan")
 }

@@ -26,9 +26,10 @@ type User struct {
 	balance     balance
 }
 
-func NewUser(conf *config.Config, generator UserIDGenerator, firstName, lastName, displayName string) *User {
+// TODO: remove the dependency related to id generation
+func NewUser(conf *config.Config, id UserID, firstName, lastName, displayName string) *User {
 	return &User{
-		ID:          generator.Generate(),
+		ID:          id,
 		FirstName:   firstName,
 		LastName:    lastName,
 		DisplayName: displayName,
