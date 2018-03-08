@@ -223,7 +223,7 @@ func (b *SlackBot) handleClaimCommand(e *slack.MessageEvent, fromID entity.UserI
 		},
 	}
 
-	b.postMessageWithAttachment(e, msg, btns)
+	b.postMessageWithAttachment(string(to.ID), msg, btns)
 
 	b.logger.Printf("%#v\n", invoice)
 	return nil
@@ -268,8 +268,8 @@ func (b *SlackBot) postMessage(e *slack.MessageEvent, msg string) {
 	})
 }
 
-func (b *SlackBot) postMessageWithAttachment(e *slack.MessageEvent, msg string, attachments ...slack.Attachment) {
-	b.client.PostMessage(e.Msg.Channel, msg, slack.PostMessageParameters{
+func (b *SlackBot) postMessageWithAttachment(channel, msg string, attachments ...slack.Attachment) {
+	b.client.PostMessage(channel, msg, slack.PostMessageParameters{
 		Username:    b.cfg.Controller.Slack.DisplayName,
 		AsUser:      true,
 		Attachments: attachments,
