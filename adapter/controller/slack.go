@@ -105,10 +105,7 @@ func (b *SlackBot) startInteractionServer() error {
 		repo:              b.repo,
 		verificationToken: b.cfg.Controller.Slack.VerificationToken,
 	})
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		return err
-	}
-	return nil
+	return http.ListenAndServe(":8080", nil)
 }
 
 func (b *SlackBot) updateSlackUsers() error {

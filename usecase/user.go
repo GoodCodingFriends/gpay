@@ -34,7 +34,7 @@ func FindBothUsers(repo *repository.Repository, fromID, toID entity.UserID) (*en
 }
 
 // for testing
-var findBothUsers func(*repository.Repository, entity.UserID, entity.UserID) (*entity.User, *entity.User, error) = FindBothUsers
+var findBothUsers = FindBothUsers
 
 func FindBothUsersWithUserCreation(cfg *config.Config, repo *repository.Repository, fromID, toID entity.UserID) (*entity.User, *entity.User, error) {
 	from, to, baseErr := findBothUsers(repo, fromID, toID)
