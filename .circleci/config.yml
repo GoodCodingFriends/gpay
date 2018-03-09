@@ -4,9 +4,20 @@ jobs:
     working_directory: /go/src/github.com/GoodCodingFriends/gpay
     docker:
       - image: ktr0731/circleci-gpay
+      - image: circleci/mysql:5.7
+        environment:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
 
     steps:
       - checkout
+
+      - run:
+          name: wait until waking up MySQL
+          command: |
+            for i in $(seq 60)
+            do
+              mysql -u root -e 'show databases' || (sleep 1; false) && break
+            done
 
       - run:
           name: migrate

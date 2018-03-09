@@ -7,6 +7,7 @@ import (
 	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity"
 	repo "github.com/GoodCodingFriends/gpay/repository"
+	// MySQL driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
