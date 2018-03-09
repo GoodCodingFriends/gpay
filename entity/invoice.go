@@ -16,8 +16,8 @@ type Invoice struct {
 	ID           InvoiceID
 	Status       Status
 	FromID, ToID UserID
-	amount       Amount
-	message      string
+	Amount       Amount
+	Message      string
 }
 
 func newInvoice(from, to UserID, amount Amount, message string) *Invoice {
@@ -25,7 +25,7 @@ func newInvoice(from, to UserID, amount Amount, message string) *Invoice {
 		ID:      InvoiceID(id.New()),
 		FromID:  from,
 		ToID:    to,
-		amount:  amount,
-		message: message,
+		Amount:  amount,
+		Message: message,
 	}
 }

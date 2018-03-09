@@ -75,11 +75,11 @@ func (u *User) AcceptInvoice(invoice *Invoice, from *User) (*Transaction, error)
 
 	invoice.Status = StatusAccepted
 
-	if err := send(u, from, invoice.amount); err != nil {
+	if err := send(u, from, invoice.Amount); err != nil {
 		return nil, err
 	}
 
-	return newTransaction(TxTypeClaim, from.ID, u.ID, invoice.amount, invoice.message), nil
+	return newTransaction(TxTypeClaim, from.ID, u.ID, invoice.Amount, invoice.Message), nil
 }
 
 func (u *User) RejectInvoice(invoice *Invoice, from *User) error {
