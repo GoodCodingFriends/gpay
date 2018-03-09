@@ -28,14 +28,15 @@ type User struct {
 
 // TODO: remove the dependency related to id generation
 
-func NewUser(conf *config.Config, id UserID, firstName, lastName, displayName string) *User {
+func NewUser(conf *config.Config, id UserID, firstName, lastName, displayName string, amount int64) *User {
 	return &User{
 		ID:          id,
 		FirstName:   firstName,
 		LastName:    lastName,
 		DisplayName: displayName,
 		balance: balance{
-			conf: conf,
+			conf:   conf,
+			amount: Amount(amount),
 		},
 	}
 }

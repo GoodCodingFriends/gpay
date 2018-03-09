@@ -55,7 +55,7 @@ func FindBothUsersWithUserCreation(cfg *config.Config, repo *repository.Reposito
 		}
 
 		// TODO: first, lastname, display name
-		u := entity.NewUser(cfg, uerr.id, "", "", "")
+		u := entity.NewUser(cfg, uerr.id, "", "", "", 0)
 		users = append(users, u)
 
 		// don't use "else if" because user can send hisself
