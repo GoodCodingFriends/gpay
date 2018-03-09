@@ -117,8 +117,8 @@ func TestUser_Claim_success(t *testing.T) {
 
 	require.Equal(t, from.ID, invoice.FromID)
 	require.Equal(t, to.ID, invoice.ToID)
-	require.Equal(t, Amount(300), invoice.amount)
-	require.Equal(t, "msg", invoice.message)
+	require.Equal(t, Amount(300), invoice.Amount)
+	require.Equal(t, "msg", invoice.Message)
 }
 
 func TestUser_AcceptInvoice_errors(t *testing.T) {
@@ -140,8 +140,8 @@ func TestUser_AcceptInvoice_success(t *testing.T) {
 		ID:      InvoiceID(id.New()),
 		FromID:  from.ID,
 		ToID:    to.ID,
-		amount:  Amount(300),
-		message: "msg",
+		Amount:  Amount(300),
+		Message: "msg",
 	}
 
 	tx, err := to.AcceptInvoice(invoice, from)
