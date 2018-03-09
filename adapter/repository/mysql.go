@@ -11,6 +11,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var (
+	tableUsers    = "users"
+	tableInvoices = "invoices"
+	tableTxs      = "transactions"
+)
+
 var sqlOpen func(driveName, dataSourceName string) (*sqlx.DB, error) = sqlx.Open
 
 type client interface {
@@ -84,7 +90,7 @@ func toUserEntity(cfg *config.Config, user *user) *entity.User {
 
 func (r *mySQLUserRepository) FindByID(ctx context.Context, id entity.UserID) (*entity.User, error) {
 	var user user
-	q := `SELECT * FROM users WHERE id = ?`
+	q := fmt.Sprintf(`SELECT * FROM %s WHERE id = ?`, tableUsers)
 	err := r.client.Get(&user, q, string(id))
 	if err != nil {
 		return nil, err
@@ -94,7 +100,7 @@ func (r *mySQLUserRepository) FindByID(ctx context.Context, id entity.UserID) (*
 
 func (r *mySQLUserRepository) FindAll(ctx context.Context) ([]*entity.User, error) {
 	var dbUsers []*user
-	q := `SELECT * FROM users`
+	q := fmt.Sprintf(`SELECT * FROM %s`, tableUsers)
 	err := r.client.Select(&dbUsers, q)
 	if err != nil {
 		return nil, err
@@ -111,11 +117,11 @@ func (r *mySQLUserRepository) FindAll(ctx context.Context) ([]*entity.User, erro
 }
 
 func (r *mySQLUserRepository) Store(ctx context.Context, user *entity.User) error {
-	q := `INSERT INTO users(
+	q := fmt.Sprintf(`INSERT INTO %s(
 		id, first_name, last_name, display_name, amount)
 		VALUES(?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
-		id = ?, first_name = ?, last_name = ?, display_name = ?, amount = ?`
+		id = ?, first_name = ?, last_name = ?, display_name = ?, amount = ?`, tableUsers)
 	_, err := r.client.Exec(
 		q,
 		string(user.ID), user.FirstName, user.LastName, user.DisplayName, int64(user.BalanceAmount()),
@@ -159,7 +165,7 @@ type mySQLInvoiceRepository struct {
 
 func (r *mySQLInvoiceRepository) FindByID(ctx context.Context, id entity.InvoiceID) (*entity.Invoice, error) {
 	var invoice invoice
-	q := `SELECT * FROM invoices WHERE id = ?`
+	q := fmt.Sprintf(`SELECT * FROM %s WHERE id = ?`, tableInvoices)
 	err := r.client.Get(&invoice, q, string(id))
 	if err != nil {
 		return nil, err
@@ -169,7 +175,7 @@ func (r *mySQLInvoiceRepository) FindByID(ctx context.Context, id entity.Invoice
 
 func (r *mySQLInvoiceRepository) FindAll(ctx context.Context) ([]*entity.Invoice, error) {
 	var dbInvoices []*invoice
-	q := `SELECT * FROM invoices`
+	q := fmt.Sprintf(`SELECT * FROM %s`, tableInvoices)
 	err := r.client.Select(&dbInvoices, q)
 	if err != nil {
 		return nil, err
@@ -186,11 +192,11 @@ func (r *mySQLInvoiceRepository) FindAll(ctx context.Context) ([]*entity.Invoice
 }
 
 func (r *mySQLInvoiceRepository) Store(ctx context.Context, invoice *entity.Invoice) error {
-	q := `INSERT INTO invoices(
+	q := fmt.Sprintf(`INSERT INTO %s(
 		id, status, from_id, to_id, amount, message)
 		VALUES(?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
-		id = ?, status = ?, from_id = ?, to_id = ?, amount = ?, message = ?`
+		id = ?, status = ?, from_id = ?, to_id = ?, amount = ?, message = ?`, tableInvoices)
 	_, err := r.client.Exec(
 		q,
 		string(invoice.ID), int(invoice.Status), string(invoice.FromID), string(invoice.ToID), int64(invoice.Amount), invoice.Message,
@@ -235,7 +241,7 @@ func toTransactionEntity(tx *transaction) *entity.Transaction {
 
 func (r *mySQLTxRepository) FindByID(ctx context.Context, id entity.TxID) (*entity.Transaction, error) {
 	var tx transaction
-	q := `SELECT * FROM transactions WHERE id = ?`
+	q := fmt.Sprintf(`SELECT * FROM %s WHERE id = ?`, tableTxs)
 	err := r.client.Get(&tx, q, string(id))
 	if err != nil {
 		return nil, err
@@ -245,7 +251,7 @@ func (r *mySQLTxRepository) FindByID(ctx context.Context, id entity.TxID) (*enti
 
 func (r *mySQLTxRepository) FindAll(ctx context.Context) ([]*entity.Transaction, error) {
 	var dbTransactions []*transaction
-	q := `SELECT * FROM transactions`
+	q := fmt.Sprintf(`SELECT * FROM %s`, tableTxs)
 	err := r.client.Select(&dbTransactions, q)
 	if err != nil {
 		return nil, err
@@ -262,11 +268,11 @@ func (r *mySQLTxRepository) FindAll(ctx context.Context) ([]*entity.Transaction,
 }
 
 func (r *mySQLTxRepository) Store(ctx context.Context, tx *entity.Transaction) error {
-	q := `INSERT INTO transactions(
+	q := fmt.Sprintf(`INSERT INTO %s(
 		id, transaction_type, from_id, to_id, amount, message)
 		VALUES(?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
-		id = ?, transaction_type = ?, from_id = ?, to_id = ?, amount = ?, message = ?`
+		id = ?, transaction_type = ?, from_id = ?, to_id = ?, amount = ?, message = ?`, tableTxs)
 	_, err := r.client.Exec(
 		q,
 		string(tx.ID), int(tx.Type), string(tx.From), string(tx.To), int64(tx.Amount), tx.Message,
@@ -275,14 +281,18 @@ func (r *mySQLTxRepository) Store(ctx context.Context, tx *entity.Transaction) e
 	return err
 }
 
-func NewMySQLRepository(cfg *config.Config) (*repo.Repository, error) {
+func newMySQLDB(cfg *config.Config) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf(
 		"%s:%s@/%s",
 		cfg.Repository.MySQL.UserName,
 		cfg.Repository.MySQL.Password,
 		cfg.Repository.MySQL.DBName,
 	)
-	db, err := sqlOpen("mysql", dsn)
+	return sqlOpen("mysql", dsn)
+}
+
+func NewMySQLRepository(cfg *config.Config) (*repo.Repository, error) {
+	db, err := newMySQLDB(cfg)
 	if err != nil {
 		return nil, err
 	}

@@ -9,6 +9,10 @@ jobs:
       - checkout
 
       - run:
+          name: migrate
+          command: mysql -u root < database/schema.sql
+
+      - run:
           name: build
           command: make build
 
