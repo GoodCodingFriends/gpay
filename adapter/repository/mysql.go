@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity"
 	repo "github.com/GoodCodingFriends/gpay/repository"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -21,8 +23,10 @@ type client interface {
 }
 
 type mySQLTxBeginner struct {
-	db   *sqlx.DB
-	user *mySQLUserRepository
+	db      *sqlx.DB
+	user    *mySQLUserRepository
+	invoice *mySQLInvoiceRepository
+	tx      *mySQLTxRepository
 }
 
 func (b *mySQLTxBeginner) BeginTx(ctx context.Context) (repo.TxCommitter, context.Context, error) {
@@ -31,22 +35,27 @@ func (b *mySQLTxBeginner) BeginTx(ctx context.Context) (repo.TxCommitter, contex
 		return nil, nil, err
 	}
 	return &mySQLTxCommitter{
-		tx:   tx,
-		user: b.user,
+		dbtx:    tx,
+		user:    b.user,
+		invoice: b.invoice,
+		tx:      b.tx,
 	}, ctx, nil
 }
 
 type mySQLTxCommitter struct {
-	tx   *sqlx.Tx
-	user *mySQLUserRepository
+	dbtx *sqlx.Tx
+
+	user    *mySQLUserRepository
+	invoice *mySQLInvoiceRepository
+	tx      *mySQLTxRepository
 }
 
 func (c *mySQLTxCommitter) Commit() error {
-	return c.tx.Commit()
+	return c.dbtx.Commit()
 }
 
 func (c *mySQLTxCommitter) Rollback() error {
-	return c.tx.Rollback()
+	return c.dbtx.Rollback()
 }
 
 type user struct {
@@ -76,7 +85,7 @@ func toUserEntity(cfg *config.Config, user *user) *entity.User {
 func (r *mySQLUserRepository) FindByID(ctx context.Context, id entity.UserID) (*entity.User, error) {
 	var user user
 	q := `SELECT * FROM users WHERE id = ?`
-	err := r.client.Get(&user, q, id)
+	err := r.client.Get(&user, q, string(id))
 	if err != nil {
 		return nil, err
 	}
@@ -104,8 +113,14 @@ func (r *mySQLUserRepository) FindAll(ctx context.Context) ([]*entity.User, erro
 func (r *mySQLUserRepository) Store(ctx context.Context, user *entity.User) error {
 	q := `INSERT INTO users(
 		id, first_name, last_name, display_name, amount)
-		VALUES(?, ?, ?, ?, ?)`
-	_, err := r.client.Exec(q, user.ID, user.FirstName, user.LastName, user.DisplayName, user.BalanceAmount())
+		VALUES(?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+		id = ?, first_name = ?, last_name = ?, display_name = ?, amount = ?`
+	_, err := r.client.Exec(
+		q,
+		string(user.ID), user.FirstName, user.LastName, user.DisplayName, int64(user.BalanceAmount()),
+		string(user.ID), user.FirstName, user.LastName, user.DisplayName, int64(user.BalanceAmount()),
+	)
 	return err
 }
 
@@ -145,7 +160,7 @@ type mySQLInvoiceRepository struct {
 func (r *mySQLInvoiceRepository) FindByID(ctx context.Context, id entity.InvoiceID) (*entity.Invoice, error) {
 	var invoice invoice
 	q := `SELECT * FROM invoices WHERE id = ?`
-	err := r.client.Get(&invoice, q, id)
+	err := r.client.Get(&invoice, q, string(id))
 	if err != nil {
 		return nil, err
 	}
@@ -173,8 +188,14 @@ func (r *mySQLInvoiceRepository) FindAll(ctx context.Context) ([]*entity.Invoice
 func (r *mySQLInvoiceRepository) Store(ctx context.Context, invoice *entity.Invoice) error {
 	q := `INSERT INTO invoices(
 		id, status, from_id, to_id, amount, message)
-		VALUES(?, ?, ?, ?, ?, ?)`
-	_, err := r.client.Exec(q, invoice.ID, invoice.Status, invoice.FromID, invoice.ToID, invoice.Amount, invoice.Message)
+		VALUES(?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+		id = ?, status = ?, from_id = ?, to_id = ?, amount = ?, message = ?`
+	_, err := r.client.Exec(
+		q,
+		string(invoice.ID), int(invoice.Status), string(invoice.FromID), string(invoice.ToID), int64(invoice.Amount), invoice.Message,
+		string(invoice.ID), int(invoice.Status), string(invoice.FromID), string(invoice.ToID), int64(invoice.Amount), invoice.Message,
+	)
 	return err
 }
 
@@ -215,7 +236,7 @@ func toTransactionEntity(tx *transaction) *entity.Transaction {
 func (r *mySQLTxRepository) FindByID(ctx context.Context, id entity.TxID) (*entity.Transaction, error) {
 	var tx transaction
 	q := `SELECT * FROM transactions WHERE id = ?`
-	err := r.client.Get(&tx, q, id)
+	err := r.client.Get(&tx, q, string(id))
 	if err != nil {
 		return nil, err
 	}
@@ -243,21 +264,36 @@ func (r *mySQLTxRepository) FindAll(ctx context.Context) ([]*entity.Transaction,
 func (r *mySQLTxRepository) Store(ctx context.Context, tx *entity.Transaction) error {
 	q := `INSERT INTO transactions(
 		id, transaction_type, from_id, to_id, amount, message)
-		VALUES(?, ?, ?, ?, ?, ?)`
-	_, err := r.client.Exec(q, tx.ID, tx.Type, tx.From, tx.To, tx.Amount, tx.Message)
+		VALUES(?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+		id = ?, transaction_type = ?, from_id = ?, to_id = ?, amount = ?, message = ?`
+	_, err := r.client.Exec(
+		q,
+		string(tx.ID), int(tx.Type), string(tx.From), string(tx.To), int64(tx.Amount), tx.Message,
+		string(tx.ID), int(tx.Type), string(tx.From), string(tx.To), int64(tx.Amount), tx.Message,
+	)
 	return err
 }
 
 func NewMySQLRepository(cfg *config.Config) (*repo.Repository, error) {
-	db, err := sqlOpen("", "")
+	dsn := fmt.Sprintf(
+		"%s:%s@/%s",
+		cfg.Repository.MySQL.UserName,
+		cfg.Repository.MySQL.Password,
+		cfg.Repository.MySQL.DBName,
+	)
+	db, err := sqlOpen("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
 	user := &mySQLUserRepository{cfg, db}
-	invoice := &mySQLInvoiceRepository{}
-	tx := &mySQLTxRepository{}
+	invoice := &mySQLInvoiceRepository{cfg, db}
+	tx := &mySQLTxRepository{cfg, db}
 	return repo.New(
-		&mySQLTxBeginner{db, user},
+		&mySQLTxBeginner{db, user, invoice, tx},
 		user,
 		invoice,
 		tx,

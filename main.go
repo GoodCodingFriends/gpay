@@ -7,8 +7,8 @@ import (
 
 	"github.com/GoodCodingFriends/gpay/adapter"
 	"github.com/GoodCodingFriends/gpay/adapter/controller"
+	"github.com/GoodCodingFriends/gpay/adapter/repository"
 	"github.com/GoodCodingFriends/gpay/config"
-	"github.com/GoodCodingFriends/gpay/repository/repositorytest"
 )
 
 func main() {
@@ -18,7 +18,10 @@ func main() {
 	}
 
 	logger := log.New(os.Stdout, "[gpay] ", log.Lshortfile|log.LstdFlags)
-	repo := repositorytest.NewInMemory()
+	repo, err := repository.NewMySQLRepository(cfg)
+	if err != nil {
+		panic(err)
+	}
 
 	bot, err := controller.NewSlackBot(logger, cfg, repo)
 	if err != nil {

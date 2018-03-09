@@ -176,6 +176,9 @@ func (b *SlackBot) handlePayCommand(e *slack.MessageEvent, fromID entity.UserID,
 		return err
 	}
 	from, to, err := usecase.FindBothUsersWithUserCreation(b.cfg, b.repo, fromID, toID)
+	if err != nil {
+		return err
+	}
 	tx, err := usecase.Pay(b.repo, &usecase.PayParam{
 		From:    from,
 		To:      to,
@@ -197,6 +200,9 @@ func (b *SlackBot) handleClaimCommand(e *slack.MessageEvent, fromID entity.UserI
 		return err
 	}
 	from, to, err := usecase.FindBothUsersWithUserCreation(b.cfg, b.repo, fromID, toID)
+	if err != nil {
+		return err
+	}
 	invoice, err := usecase.Claim(b.repo, &usecase.ClaimParam{
 		From:    from,
 		To:      to,

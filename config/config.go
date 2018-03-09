@@ -15,6 +15,7 @@ var (
 type Config struct {
 	Meta       *Meta
 	Controller *Controller
+	Repository *Repository
 	Entity     *Entity
 }
 
@@ -24,6 +25,16 @@ type Meta struct {
 
 type Entity struct {
 	BalanceLowerLimit int64 `default:"-5000"`
+}
+
+type Repository struct {
+	MySQL *MySQL
+}
+
+type MySQL struct {
+	UserName string `default:"root"`
+	Password string `default:""`
+	DBName   string `default:"gpay"`
 }
 
 type Controller struct {

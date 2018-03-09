@@ -29,7 +29,7 @@ CREATE TABLE invoices(
 DROP TABLE IF EXISTS transactions;
 CREATE TABLE transactions(
   id VARCHAR(255) PRIMARY KEY,
-  tranasction_type TINYINT not null,
+  transaction_type TINYINT not null,
   from_id VARCHAR(255) not null,
   to_id VARCHAR(255) not null,
   amount BIGINT not null,
