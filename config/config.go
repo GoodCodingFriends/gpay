@@ -51,6 +51,8 @@ type Slack struct {
 	VerificationToken string `default:"sound!euphonium"`
 
 	MaxListTransactionNum int `default:"5"`
+
+	Port string `default:"8080"`
 }
 
 var processErr error

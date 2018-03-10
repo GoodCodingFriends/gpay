@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -107,7 +108,14 @@ func (b *SlackBot) startInteractionServer() error {
 		repo:              b.repo,
 		verificationToken: b.cfg.Controller.Slack.VerificationToken,
 	})
-	return http.ListenAndServe(":8080", nil)
+
+	var port string
+	if os.Getenv("PORT") != "" {
+		port = os.Getenv("PORT")
+	} else {
+		port = b.cfg.Controller.Slack.Port
+	}
+	return http.ListenAndServe(":"+port, nil)
 }
 
 func (b *SlackBot) updateSlackUsers() error {
@@ -350,9 +358,9 @@ func (p *parser) parse(args []string) (to entity.UserID, amount entity.Amount, e
 func (p *parser) normalizeUserID(s string) (entity.UserID, error) {
 	res := userIDPattern.FindStringSubmatch(s)
 	if len(res) == 2 {
-		// if _, ok := p.idToSlackUser[res[1]]; ok {
-		return entity.UserID(res[1]), nil
-		// }
+		if _, ok := p.idToSlackUser[res[1]]; ok {
+			return entity.UserID(res[1]), nil
+		}
 	}
 	return entity.UserID(""), ErrInvalidUserID
 }
