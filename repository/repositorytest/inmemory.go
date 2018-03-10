@@ -90,6 +90,18 @@ func (r *inMemoryTxRepository) Store(ctx context.Context, tx *entity.Transaction
 	return nil
 }
 
+func (r *inMemoryTxRepository) FindAllByUserID(ctx context.Context, id entity.UserID) ([]*entity.Transaction, error) {
+	var txs []*entity.Transaction
+	r.m.Range(func(k, v interface{}) bool {
+		tx := v.(entity.Transaction)
+		if tx.From == id || tx.To == id {
+			txs = append(txs, &tx)
+		}
+		return true
+	})
+	return txs, nil
+}
+
 type inMemoryTxBeginner struct {
 	user *inMemoryUserRepository
 	tx   *inMemoryTxRepository

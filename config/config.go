@@ -49,6 +49,8 @@ type Slack struct {
 	BotName           string `default:"gpay"`
 	DoneEmoji         string `default:"sushi"`
 	VerificationToken string `default:"sound!euphonium"`
+
+	MaxListTransactionNum int `default:"5"`
 }
 
 var processErr error

@@ -243,6 +243,17 @@ func toTransactionEntity(tx *transaction) *entity.Transaction {
 	}
 }
 
+func toTransactionEntities(txs []*transaction) []*entity.Transaction {
+	transactions := make([]*entity.Transaction, 0, len(txs))
+	for _, tx := range txs {
+		transactions = append(
+			transactions,
+			toTransactionEntity(tx),
+		)
+	}
+	return transactions
+}
+
 func (r *mySQLTxRepository) FindByID(ctx context.Context, id entity.TxID) (*entity.Transaction, error) {
 	var tx transaction
 	q := fmt.Sprintf(`SELECT * FROM %s WHERE id = ?`, tableTxs)
@@ -254,21 +265,25 @@ func (r *mySQLTxRepository) FindByID(ctx context.Context, id entity.TxID) (*enti
 }
 
 func (r *mySQLTxRepository) FindAll(ctx context.Context) ([]*entity.Transaction, error) {
-	var dbTransactions []*transaction
+	var txs []*transaction
 	q := fmt.Sprintf(`SELECT * FROM %s`, tableTxs)
-	err := r.client.Select(&dbTransactions, q)
+	err := r.client.Select(&txs, q)
 	if err != nil {
 		return nil, err
 	}
+	return toTransactionEntities(txs), nil
+}
 
-	transactions := make([]*entity.Transaction, 0, len(dbTransactions))
-	for _, tx := range dbTransactions {
-		transactions = append(
-			transactions,
-			toTransactionEntity(tx),
-		)
+func (r *mySQLTxRepository) FindAllByUserID(ctx context.Context, id entity.UserID) ([]*entity.Transaction, error) {
+	var txs []*transaction
+	q := fmt.Sprintf(`SELECT * FROM %s WHERE from_id = ?
+			UNION
+			SELECT * FROM %s WHERE to_id = ?`, tableTxs, tableTxs)
+	err := r.client.Select(&txs, q, string(id), string(id))
+	if err != nil {
+		return nil, err
 	}
-	return transactions, nil
+	return toTransactionEntities(txs), nil
 }
 
 func (r *mySQLTxRepository) Store(ctx context.Context, tx *entity.Transaction) error {

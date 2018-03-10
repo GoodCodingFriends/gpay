@@ -22,6 +22,8 @@ const (
 	cmdTypePay     = "pay"
 	cmdTypeClaim   = "claim"
 	cmdTypeBalance = "balance"
+	cmdTypeTx      = "tx"
+	cmdTypeTxs     = "txs"
 
 	actionNameAccept = "accept"
 	actionNameReject = "reject"
@@ -164,6 +166,10 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		return b.handleClaimCommand(e, from, sp[2:])
 	case cmdTypeBalance:
 		return b.handleBalanceCommand(e, from)
+	case cmdTypeTx:
+		return errors.New("not implemented yet")
+	case cmdTypeTxs:
+		return b.handleListTransactionsCommand(e, from)
 	default:
 		return ErrUnknownCommand
 	}
@@ -260,6 +266,30 @@ func (b *SlackBot) handleBalanceCommand(e *slack.MessageEvent, fromID entity.Use
 		)
 	}
 	b.postMessage(e, msg)
+	return nil
+}
+
+func (b *SlackBot) handleListTransactionsCommand(e *slack.MessageEvent, fromID entity.UserID) error {
+	u, err := b.repo.User.FindByID(context.Background(), fromID)
+	if err != nil {
+		return err
+	}
+
+	txs, err := usecase.ListTransactions(b.repo, &usecase.ListTransactionsParam{u})
+	if err != nil {
+		return err
+	}
+	var builder strings.Builder
+	max := b.cfg.Controller.Slack.MaxListTransactionNum
+	if len(txs) > max {
+		txs = txs[:max]
+	}
+	for _, tx := range txs {
+		fmt.Fprintln(&builder, fmt.Sprintf(
+			"[%s (%s)] %s → %s %d 円",
+			string(tx.ID)[:8], tx.Type, tx.From, tx.To, tx.Amount))
+	}
+	b.postMessage(e, fmt.Sprintf("```%s```", builder.String()))
 	return nil
 }
 

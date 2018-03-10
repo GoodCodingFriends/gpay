@@ -6,6 +6,15 @@ type TxID string
 
 type TxType int
 
+var txTypeToString = map[TxType]string{
+	TxTypePay:   "pay",
+	TxTypeClaim: "claim",
+}
+
+func (t TxType) String() string {
+	return txTypeToString[t]
+}
+
 const (
 	TxTypePay TxType = iota
 	TxTypeClaim

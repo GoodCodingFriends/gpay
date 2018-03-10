@@ -23,5 +23,6 @@ type InvoiceRepository interface {
 type TxRepository interface {
 	FindByID(context.Context, entity.TxID) (*entity.Transaction, error)
 	FindAll(context.Context) ([]*entity.Transaction, error)
+	FindAllByUserID(context.Context, entity.UserID) ([]*entity.Transaction, error)
 	Store(context.Context, *entity.Transaction) error
 }
