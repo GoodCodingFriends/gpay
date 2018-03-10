@@ -1,10 +1,12 @@
 hash: 5c58e61f545815f0f3375a8750b3b2430f973ce2bc78a78db6e34f83e1cd0a46
-updated: 2018-03-10T00:24:48.172035302+09:00
+updated: 2018-03-10T11:33:25.415248889+09:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 2df174808ee097f90d259e432cc04442cf60be21
   subpackages:
   - spew
+- name: github.com/go-sql-driver/mysql
+  version: 1a676ac6e4dce68e9303a1800773861350374a9e
 - name: github.com/gorilla/websocket
   version: 6656ddce919367f4c4090b0f89a45854d26da020
 - name: github.com/hashicorp/errwrap
@@ -40,4 +42,8 @@ imports:
   version: dd2ff4accc098aceecb86b36eaa7829b2a17b1c9
   subpackages:
   - unix
+- name: google.golang.org/appengine
+  version: 5bee14b453b4c71be47ec1781b0fa61c2ea182db
+  subpackages:
+  - cloudsql
 testImports: []
