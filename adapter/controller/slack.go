@@ -283,7 +283,7 @@ func (b *SlackBot) handleListTransactionsCommand(e *slack.MessageEvent, fromID e
 		return err
 	}
 
-	txs, err := usecase.ListTransactions(b.repo, &usecase.ListTransactionsParam{u})
+	txs, err := usecase.ListTransactions(b.repo, &usecase.ListTransactionsParam{User: u})
 	if err != nil {
 		return err
 	}
