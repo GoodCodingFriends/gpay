@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/GoodCodingFriends/gpay/adapter"
 	"github.com/GoodCodingFriends/gpay/adapter/controller"
@@ -22,12 +24,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer repo.Close()
 
-	bot, err := controller.NewSlackBot(logger, cfg, repo)
-	if err != nil {
-		panic(err)
-	}
-	os.Exit(run(bot))
+	go func() {
+		bot, err := controller.NewSlackBot(logger, cfg, repo)
+		if err != nil {
+			panic(err)
+		}
+		os.Exit(run(bot))
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(
+		sigChan,
+		syscall.SIGTERM,
+		syscall.SIGINT,
+	)
+
+	<-sigChan
+	return
 }
 
 func run(listener adapter.Listener) int {

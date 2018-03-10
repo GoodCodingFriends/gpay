@@ -99,6 +99,10 @@ func (b *inMemoryTxBeginner) BeginTx(ctx context.Context) (repository.TxCommitte
 	return &inMemoryTxCommitter{b.user, b.tx}, context.WithValue(ctx, txFlagKey, true), nil
 }
 
+func (b *inMemoryTxBeginner) Close() error {
+	return nil
+}
+
 type inMemoryTxCommitter struct {
 	user *inMemoryUserRepository
 	tx   *inMemoryTxRepository

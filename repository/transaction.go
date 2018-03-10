@@ -4,6 +4,8 @@ import "context"
 
 type TxBeginner interface {
 	BeginTx(context.Context) (TxCommitter, context.Context, error)
+
+	Close() error
 }
 
 type TxCommitter interface {

@@ -30,6 +30,10 @@ func (r *Repository) BeginTx(ctx context.Context) (*Tx, context.Context, error) 
 	}, wrappedCtx, nil
 }
 
+func (r *Repository) Close() error {
+	return r.beginner.Close()
+}
+
 func New(txBeginner TxBeginner, userRepo UserRepository, invoiceRepo InvoiceRepository, txRepo TxRepository) *Repository {
 	return &Repository{
 		beginner:    txBeginner,

@@ -48,6 +48,10 @@ func (b *mySQLTxBeginner) BeginTx(ctx context.Context) (repo.TxCommitter, contex
 	}, ctx, nil
 }
 
+func (b *mySQLTxBeginner) Close() error {
+	return b.db.Close()
+}
+
 type mySQLTxCommitter struct {
 	dbtx *sqlx.Tx
 
