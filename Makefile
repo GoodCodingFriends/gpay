@@ -27,4 +27,7 @@ govet:
 coverage: 
 	@go tool cover -html=coverage.out
 
+migrate:
+	@mysql -h $(REPOSITORY_MYSQL_ADDRESS) -u $(REPOSITORY_MYSQL_USER) < database/schema.sql
+
 .PHONY: glide deps build test gotest golint govet coverage
