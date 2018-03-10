@@ -34,6 +34,8 @@ type Repository struct {
 type MySQL struct {
 	UserName string `default:"root"`
 	Password string `default:""`
+	Net      string `default:"tcp"`
+	Address  string `default:"127.0.0.1:3306"`
 	DBName   string `default:"gpay"`
 }
 

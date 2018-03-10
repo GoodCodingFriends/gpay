@@ -7,8 +7,7 @@ import (
 	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity"
 	repo "github.com/GoodCodingFriends/gpay/repository"
-	// MySQL driver
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -283,13 +282,14 @@ func (r *mySQLTxRepository) Store(ctx context.Context, tx *entity.Transaction) e
 }
 
 func newMySQLDB(cfg *config.Config) (*sqlx.DB, error) {
-	dsn := fmt.Sprintf(
-		"%s:%s@/%s",
-		cfg.Repository.MySQL.UserName,
-		cfg.Repository.MySQL.Password,
-		cfg.Repository.MySQL.DBName,
-	)
-	return sqlOpen("mysql", dsn)
+	dsn := &mysql.Config{
+		User:   cfg.Repository.MySQL.UserName,
+		Passwd: cfg.Repository.MySQL.Password,
+		Net:    cfg.Repository.MySQL.Net,
+		Addr:   cfg.Repository.MySQL.Address,
+		DBName: cfg.Repository.MySQL.DBName,
+	}
+	return sqlOpen("mysql", dsn.FormatDSN())
 }
 
 func NewMySQLRepository(cfg *config.Config) (*repo.Repository, error) {
