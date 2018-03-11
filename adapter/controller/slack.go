@@ -25,6 +25,7 @@ const (
 	cmdTypeBalance = "balance"
 	cmdTypeTx      = "tx"
 	cmdTypeTxs     = "txs"
+	cmdTypeHelp    = "help"
 
 	actionNameAccept = "accept"
 	actionNameReject = "reject"
@@ -179,6 +180,17 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		return errors.New("not implemented yet")
 	case cmdTypeTxs:
 		return b.handleListTransactionsCommand(e, from)
+	case cmdTypeHelp, "助けて", "たすけて":
+		// TODO: use defined type
+		txt := `gPAY: a Payment Application for You
+つかえるコマンド:
+	pay     誰かに送金する
+	claim   誰かにお金を請求する
+	balance 今持っているお金の残高を見る
+	txs     今まで発生したやりとりを見る
+	help    このテキストを表示する`
+		b.postMessage(e, fmt.Sprintf("```%s```", txt))
+		return nil
 	default:
 		return ErrUnknownCommand
 	}
