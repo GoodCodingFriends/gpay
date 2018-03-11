@@ -115,6 +115,7 @@ func (b *SlackBot) startInteractionServer() error {
 	} else {
 		port = b.cfg.Controller.Slack.Port
 	}
+	b.logger.Printf("listen in %s\n", port)
 	return http.ListenAndServe(":"+port, nil)
 }
 

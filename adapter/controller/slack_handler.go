@@ -11,7 +11,6 @@ import (
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository"
 	"github.com/GoodCodingFriends/gpay/usecase"
-	"github.com/k0kubun/pp"
 	"github.com/nlopes/slack"
 )
 
@@ -29,29 +28,40 @@ func (h *interactionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		h.logger.Printf("failed to read body: %s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if len(buf) < 8 {
+		h.logger.Printf("body is invalid: %s\n", string(buf))
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	jsonStr, err := url.QueryUnescape(string(buf)[8:])
 	if err != nil {
+		h.logger.Printf("failed to unescape body: %s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	var msg slack.AttachmentActionCallback
 	if err := json.Unmarshal([]byte(jsonStr), &msg); err != nil {
+		h.logger.Printf("failed to unmarshal body: %s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if msg.Token != h.verificationToken {
+		h.logger.Printf("invalid verification token: %s\n", msg.Token)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	invoice, err := h.repo.Invoice.FindByID(context.Background(), entity.InvoiceID(msg.CallbackID))
 	if err != nil {
+		h.logger.Printf("specified invoice not found: %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -63,18 +73,18 @@ func (h *interactionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			InvoiceID: invoice.ID,
 		})
 		if err != nil {
-			h.logger.Println(err)
+			h.logger.Printf("failed to accept the invoice: %s\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		pp.Println(tx)
+		h.logger.Println(tx)
 		responseMessage(w, msg.OriginalMessage, claimAcceptedMessage)
 	case actionNameReject:
 		err = usecase.RejectInvoice(h.repo, &usecase.RejectInvoiceParam{
 			InvoiceID: invoice.ID,
 		})
 		if err != nil {
-			h.logger.Println(err)
+			h.logger.Printf("failed to reject the invoice: %s\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
