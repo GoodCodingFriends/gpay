@@ -25,6 +25,7 @@ const (
 	cmdTypeBalance = "balance"
 	cmdTypeTx      = "tx"
 	cmdTypeTxs     = "txs"
+	cmdTypeEupho   = "eupho"
 	cmdTypeHelp    = "help"
 
 	actionNameAccept = "accept"
@@ -180,6 +181,8 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		return errors.New("not implemented yet")
 	case cmdTypeTxs:
 		return b.handleListTransactionsCommand(e, from)
+	case cmdTypeEupho:
+		return b.handleEuphoGacha(e)
 	case cmdTypeHelp, "助けて", "たすけて":
 		// TODO: use defined type
 		txt := `gPAY: a Payment Application for You
@@ -312,6 +315,10 @@ func (b *SlackBot) handleListTransactionsCommand(e *slack.MessageEvent, fromID e
 	}
 	b.postMessage(e, fmt.Sprintf("```%s```", builder.String()))
 	return nil
+}
+
+func (b *SlackBot) handleEuphoGacha(e *slack.MessageEvent) error {
+
 }
 
 func (b *SlackBot) addDoneReaction(e *slack.MessageEvent) {

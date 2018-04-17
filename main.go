@@ -26,6 +26,12 @@ func main() {
 	}
 	defer repo.Close()
 
+	store, err := store.NewGCSStore(cfg)
+	if err != nil {
+		panic(err)
+	}
+	defer store.Close()
+
 	go func() {
 		bot, err := controller.NewSlackBot(logger, cfg, repo)
 		if err != nil {
