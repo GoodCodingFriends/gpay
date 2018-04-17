@@ -340,8 +340,10 @@ func (b *SlackBot) addDoneReaction(e *slack.MessageEvent) {
 
 func (b *SlackBot) postMessage(e *slack.MessageEvent, msg string) {
 	b.client.PostMessage(e.Msg.Channel, msg, slack.PostMessageParameters{
-		Username: b.cfg.Controller.Slack.DisplayName,
-		AsUser:   true,
+		Username:    b.cfg.Controller.Slack.DisplayName,
+		AsUser:      true,
+		UnfurlMedia: true,
+		UnfurlLinks: true,
 	})
 }
 
