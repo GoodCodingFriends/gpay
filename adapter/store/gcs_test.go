@@ -5,9 +5,7 @@ import (
 	"time"
 
 	"github.com/GoodCodingFriends/gpay/config"
-	"github.com/k0kubun/pp"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var cfg *config.Config
@@ -36,14 +34,4 @@ func Test_expired(t *testing.T) {
 		res := expired(cachedAt, d)
 		assert.Equal(t, c.expired, res)
 	}
-}
-
-func TestTMP(t *testing.T) {
-	s, err := NewGCSStore(cfg)
-	require.NoError(t, err)
-
-	i, err := s.Eupho.Get()
-	require.NoError(t, err)
-
-	pp.Println(i)
 }
