@@ -64,6 +64,10 @@ func (s *gcsEuphoStore) Get() (*entity.EuphoImage, error) {
 	}, nil
 }
 
+func (s *gcsEuphoStore) Close() error {
+	return nil
+}
+
 func (s *gcsEuphoStore) cacheObjs() error {
 	it := s.bkt.Objects(context.Background(), nil)
 

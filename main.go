@@ -10,6 +10,7 @@ import (
 	"github.com/GoodCodingFriends/gpay/adapter"
 	"github.com/GoodCodingFriends/gpay/adapter/controller"
 	"github.com/GoodCodingFriends/gpay/adapter/repository"
+	"github.com/GoodCodingFriends/gpay/adapter/store"
 	"github.com/GoodCodingFriends/gpay/config"
 )
 
@@ -33,7 +34,7 @@ func main() {
 	defer store.Close()
 
 	go func() {
-		bot, err := controller.NewSlackBot(logger, cfg, repo)
+		bot, err := controller.NewSlackBot(logger, cfg, repo, store)
 		if err != nil {
 			panic(err)
 		}

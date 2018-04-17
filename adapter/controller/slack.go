@@ -15,6 +15,7 @@ import (
 	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository"
+	"github.com/GoodCodingFriends/gpay/store"
 	"github.com/GoodCodingFriends/gpay/usecase"
 	"github.com/nlopes/slack"
 )
@@ -47,6 +48,7 @@ type SlackBot struct {
 	cfg    *config.Config
 	client *slack.Client
 	repo   *repository.Repository
+	store  *store.Store
 
 	// for testing
 	disableAPIRequest bool
@@ -55,7 +57,7 @@ type SlackBot struct {
 	idToSlackUser map[string]slack.User
 }
 
-func newSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Repository) (*SlackBot, error) {
+func newSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Repository, store *store.Store) (*SlackBot, error) {
 	client := slack.New(cfg.Controller.Slack.APIToken)
 	slack.SetLogger(logger)
 	return &SlackBot{
@@ -63,11 +65,12 @@ func newSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Reposi
 		cfg:    cfg,
 		client: client,
 		repo:   repo,
+		store:  store,
 	}, nil
 }
 
-func NewSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Repository) (*SlackBot, error) {
-	bot, err := newSlackBot(logger, cfg, repo)
+func NewSlackBot(logger *log.Logger, cfg *config.Config, repo *repository.Repository, store *store.Store) (*SlackBot, error) {
+	bot, err := newSlackBot(logger, cfg, repo, store)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +321,12 @@ func (b *SlackBot) handleListTransactionsCommand(e *slack.MessageEvent, fromID e
 }
 
 func (b *SlackBot) handleEuphoGacha(e *slack.MessageEvent) error {
-
+	img, err := b.store.Eupho.Get()
+	if err != nil {
+		return err
+	}
+	b.postMessage(e, img.URL)
+	return nil
 }
 
 func (b *SlackBot) addDoneReaction(e *slack.MessageEvent) {
