@@ -2,6 +2,7 @@ package config
 
 import (
 	"sync"
+	"time"
 
 	"github.com/k0kubun/pp"
 	"github.com/kelseyhightower/envconfig"
@@ -17,6 +18,7 @@ type Config struct {
 	Controller *Controller
 	Repository *Repository
 	Entity     *Entity
+	Store      *Store
 }
 
 type Meta struct {
@@ -53,6 +55,14 @@ type Slack struct {
 	MaxListTransactionNum int `default:"5"`
 
 	Port string `default:"8080"`
+}
+
+type Store struct {
+	GCS *GCS
+}
+
+type GCS struct {
+	CacheDuration time.Duration `default:"12h"`
 }
 
 var processErr error
