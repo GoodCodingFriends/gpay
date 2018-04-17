@@ -20,7 +20,7 @@ func setupSlackBot(t *testing.T) *SlackBot {
 
 	repo := repositorytest.NewInMemory()
 
-	bot, err := newSlackBot(logger, cfg, repo)
+	bot, err := newSlackBot(logger, cfg, repo, nil)
 	require.NoError(t, err)
 
 	bot.disableAPIRequest = true
