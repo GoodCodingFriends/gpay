@@ -194,6 +194,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	claim   誰かにお金を請求する
 	balance 今持っているお金の残高を見る
 	txs     今まで発生したやりとりを見る
+	eupho   響け！ユーフォニアムガチャ
 	help    このテキストを表示する`
 		b.postMessage(e, fmt.Sprintf("```%s```", txt))
 		return nil
