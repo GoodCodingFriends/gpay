@@ -18,6 +18,10 @@ var (
 	bucketNameEupho = "sound-euphonium"
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func NewGCSStore(cfg *config.Config) (*store.Store, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
