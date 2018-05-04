@@ -1,8 +1,8 @@
 hash: 5c58e61f545815f0f3375a8750b3b2430f973ce2bc78a78db6e34f83e1cd0a46
-updated: 2018-04-17T18:29:05.858064+09:00
+updated: 2018-05-04T23:09:33.689763+09:00
 imports:
 - name: cloud.google.com/go
-  version: 08ad5b83fae708891db89a2709b269129a2113a2
+  version: bdefed94861a12abb9c2286a929e74834f0babf6
   subpackages:
   - compute/metadata
   - iam
@@ -12,13 +12,13 @@ imports:
   - internal/version
   - storage
 - name: github.com/davecgh/go-spew
-  version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
+  version: 2df174808ee097f90d259e432cc04442cf60be21
   subpackages:
   - spew
 - name: github.com/go-sql-driver/mysql
   version: 3287d94d4c6a48a63e16fffaabf27ab20203af2a
 - name: github.com/golang/protobuf
-  version: e09c5db296004fbe3f74490e84dcd62c3c5ddb1b
+  version: b4deda0973fb4c70b50d226b1af49f3da59f5265
   subpackages:
   - proto
   - protoc-gen-go/descriptor
@@ -29,7 +29,7 @@ imports:
 - name: github.com/googleapis/gax-go
   version: de2cc08e690b99dd3f7d19937d80d3d54e04682f
 - name: github.com/gorilla/websocket
-  version: cd94665a654c1ec903896f2902573b46dd21baa7
+  version: 21ab95fa12b9bdd8fecf5fa3586aad941cc98785
 - name: github.com/hashicorp/errwrap
   version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
 - name: github.com/hashicorp/go-multierror
@@ -42,25 +42,35 @@ imports:
   version: e057ee7a28277be4d2af303443b6da377768181f
 - name: github.com/kelseyhightower/envconfig
   version: b2c5c876e2659d9060d82e9b8494150d53854cc4
+- name: github.com/ktr0731/lgtm
+  version: e29c9c299b7a0f233b40f23ac00703fa82a5662a
 - name: github.com/mattn/go-colorable
   version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
 - name: github.com/mattn/go-isatty
   version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
+- name: github.com/nfnt/resize
+  version: 83c6a9932646f83e3267f353373d47347b6036b2
 - name: github.com/nlopes/slack
-  version: 3472fa2dd0347a0d966feaf49d3e197d50e9576e
+  version: 885df8f78dfbb91166a746e4ea93367b04095dff
+- name: github.com/pkg/errors
+  version: 816c9085562cd7ee03e7f8188a1cfd942858cded
 - name: github.com/pmezard/go-difflib
-  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/rakyll/statik
+  version: fcdcb7b85139b8b9ca1d8ef1d98d8593e90d117f
+  subpackages:
+  - fs
 - name: github.com/satori/go.uuid
   version: 36e9d2ebbde5e3f13ab2e25625fd453271d6522e
 - name: github.com/stretchr/testify
-  version: c679ae2cc0cb27ec3293fea7e254e47386f05d69
+  version: f390dcf405f7b83c997eac1b06768bb9f44dec18
   subpackages:
   - assert
   - require
 - name: go.opencensus.io
-  version: 42ea10704efbac3dd764b0903fb29d996de99510
+  version: c11636694056ed1d664b058521f3aa61016da8ba
   subpackages:
   - exporter/stackdriver/propagation
   - internal
@@ -75,7 +85,7 @@ imports:
   - trace/internal
   - trace/propagation
 - name: golang.org/x/net
-  version: 8d16fa6dc9a85c1cd3ed24ad08ff21cf94f10888
+  version: 640f4622ab692b87c2f3a94265e6f579fe38263d
   subpackages:
   - context
   - context/ctxhttp
@@ -87,14 +97,14 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: 6881fee410a5daf86371371f9ad451b95e168b71
+  version: cdc340f7c179dbbfa4afd43b7614e8fcadde4269
   subpackages:
   - google
   - internal
   - jws
   - jwt
 - name: golang.org/x/sys
-  version: b126b21c05a91c856b027c16779c12e3bf236954
+  version: 6f686a352de66814cdd080d970febae7767857a3
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -105,7 +115,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/api
-  version: 9c79deebf7496e355d7e95d82d4af1fe4e769b2f
+  version: db8ef494b6bdaf472489f97ad9c556e18c963444
   subpackages:
   - gensupport
   - googleapi
@@ -117,7 +127,7 @@ imports:
   - storage/v1
   - transport/http
 - name: google.golang.org/appengine
-  version: 0a24098c0ec68416ec050f567f75df563d6b231e
+  version: 962cbd1200af94a5a35ba8d512e9f91271b4d01a
   subpackages:
   - cloudsql
   - internal
@@ -130,14 +140,14 @@ imports:
   - internal/urlfetch
   - urlfetch
 - name: google.golang.org/genproto
-  version: 7fd901a49ba6a7f87732eb344f6e3c5b19d1b200
+  version: 86e600f69ee4704c6efbf6a2a40a5c10700e76c2
   subpackages:
   - googleapis/api/annotations
   - googleapis/iam/v1
   - googleapis/rpc/code
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 5d8897144f741c0358f5f194503db84142d0a985
+  version: b412d5aa54a1f82a55b21f3a8862d6d73baee3d9
   subpackages:
   - balancer
   - balancer/base
