@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"net/http"
@@ -11,12 +13,15 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/GoodCodingFriends/gpay/config"
 	"github.com/GoodCodingFriends/gpay/entity"
 	"github.com/GoodCodingFriends/gpay/repository"
 	"github.com/GoodCodingFriends/gpay/store"
 	"github.com/GoodCodingFriends/gpay/usecase"
+	"github.com/k0kubun/pp"
+	"github.com/ktr0731/lgtm"
 	"github.com/nlopes/slack"
 )
 
@@ -185,7 +190,11 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	case cmdTypeTxs:
 		return b.handleListTransactionsCommand(e, from)
 	case cmdTypeEupho:
-		return b.handleEuphoGacha(e)
+		param := []string{}
+		if len(sp) >= 3 {
+			param = sp[2:]
+		}
+		return b.handleEuphoGacha(e, param)
 	case cmdTypeHelp, "助けて", "たすけて":
 		// TODO: use defined type
 		txt := `gPAY: a Payment Application for You
@@ -321,12 +330,31 @@ func (b *SlackBot) handleListTransactionsCommand(e *slack.MessageEvent, fromID e
 	return nil
 }
 
-func (b *SlackBot) handleEuphoGacha(e *slack.MessageEvent) error {
+func (b *SlackBot) handleEuphoGacha(e *slack.MessageEvent, args []string) error {
 	img, err := b.store.Eupho.Get()
 	if err != nil {
 		return err
 	}
-	b.postMessage(e, img.URL)
+
+	switch {
+	// LGTM mode
+	case len(args) == 1 && args[0] == "lgtm":
+		res, err := http.Get(img.URL)
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
+
+		out := new(bytes.Buffer)
+		if err := lgtm.New(res.Body, out); err != nil {
+			return err
+		}
+		if err := b.uploadFile(e, out); err != nil {
+			return err
+		}
+	default:
+		b.postMessage(e, img.URL)
+	}
 	return nil
 }
 
@@ -353,6 +381,19 @@ func (b *SlackBot) postMessageWithAttachment(channel, msg string, attachments ..
 		AsUser:      true,
 		Attachments: attachments,
 	})
+}
+
+func (b *SlackBot) uploadFile(e *slack.MessageEvent, r io.Reader) error {
+	title := fmt.Sprintf("%d.png", time.Now().UnixNano())
+	f, err := b.client.UploadFile(slack.FileUploadParameters{
+		Title:    title,
+		Filename: title,
+		Reader:   r,
+		Filetype: "png",
+		Channels: []string{e.Msg.Channel},
+	})
+	pp.Println(f)
+	return err
 }
 
 type parser struct {
