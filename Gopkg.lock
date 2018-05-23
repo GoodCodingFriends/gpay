@@ -115,8 +115,7 @@
 [[projects]]
   name = "github.com/nlopes/slack"
   packages = ["."]
-  revision = "8ab4d0b364ef1e9af5d102531da20d5ec902b6c4"
-  version = "v0.2.0"
+  revision = "3472fa2dd0347a0d966feaf49d3e197d50e9576e"
 
 [[projects]]
   name = "github.com/pkg/errors"
