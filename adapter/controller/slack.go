@@ -26,6 +26,7 @@ import (
 )
 
 const (
+	cmdTypePing    = "ping"
 	cmdTypePay     = "pay"
 	cmdTypeClaim   = "claim"
 	cmdTypeBalance = "balance"
@@ -102,6 +103,11 @@ func (b *SlackBot) Listen() error {
 				}
 				continue
 			}
+		case *slack.ReactionAddedEvent:
+			err := b.handleReactionAddedEvent(e)
+			if err != nil {
+				b.logger.Printf("handleReactionAddedEvent: %s", err)
+			}
 		}
 	}
 	return nil
@@ -173,6 +179,8 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	from := entity.UserID(e.User)
 
 	switch cmdType {
+	case cmdTypePing, "いる？":
+		return b.handlePingCommand(e)
 	case cmdTypePay:
 		if len(sp) != 4 {
 			return ErrInvalidUsage
@@ -199,6 +207,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		// TODO: use defined type
 		txt := `gPAY: a Payment Application for You
 つかえるコマンド:
+	ping    久美子を呼ぶ
 	pay     誰かに送金する
 	claim   誰かにお金を請求する
 	balance 今持っているお金の残高を見る
@@ -210,6 +219,11 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	default:
 		return ErrUnknownCommand
 	}
+}
+
+func (b *SlackBot) handlePingCommand(e *slack.MessageEvent) error {
+	b.postMessage(e, "いるよ")
+	return nil
 }
 
 func (b *SlackBot) handlePayCommand(e *slack.MessageEvent, fromID entity.UserID, sp []string) error {
@@ -339,22 +353,38 @@ func (b *SlackBot) handleEuphoGacha(e *slack.MessageEvent, args []string) error 
 	switch {
 	// LGTM mode
 	case len(args) == 1 && args[0] == "lgtm":
-		res, err := http.Get(img.URL)
+		lgtm, err := getLGTM(img.URL)
 		if err != nil {
 			return err
 		}
-		defer res.Body.Close()
-
-		out := new(bytes.Buffer)
-		if err := lgtm.New(res.Body, out); err != nil {
-			return err
-		}
-		if err := b.uploadFile(e, out); err != nil {
+		if err := b.uploadFile(e.Msg.Channel, lgtm); err != nil {
 			return err
 		}
 	default:
 		b.postMessage(e, img.URL)
 	}
+	return nil
+}
+
+func (b *SlackBot) handleReactionAddedEvent(e *slack.ReactionAddedEvent) error {
+	if e.Reaction != "lgtm-1" {
+		return nil
+	}
+
+	img, err := b.store.Eupho.Get()
+	if err != nil {
+		return err
+	}
+
+	lgtm, err := getLGTM(img.URL)
+	if err != nil {
+		return err
+	}
+
+	if err := b.uploadFile(e.Item.Channel, lgtm); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -383,14 +413,14 @@ func (b *SlackBot) postMessageWithAttachment(channel, msg string, attachments ..
 	})
 }
 
-func (b *SlackBot) uploadFile(e *slack.MessageEvent, r io.Reader) error {
+func (b *SlackBot) uploadFile(ch string, r io.Reader) error {
 	title := fmt.Sprintf("%d.png", time.Now().UnixNano())
 	f, err := b.client.UploadFile(slack.FileUploadParameters{
 		Title:    title,
 		Filename: title,
 		Reader:   r,
 		Filetype: "png",
-		Channels: []string{e.Msg.Channel},
+		Channels: []string{ch},
 	})
 	pp.Println(f)
 	return err
@@ -435,4 +465,18 @@ func (p *parser) normalizeUserID(s string) (entity.UserID, error) {
 		}
 	}
 	return entity.UserID(""), ErrInvalidUserID
+}
+
+func getLGTM(url string) (io.Reader, error) {
+	res, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	out := new(bytes.Buffer)
+	if err := lgtm.New(res.Body, out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
