@@ -4,7 +4,7 @@ deps:
 	@dep ensure
 
 build: deps
-	@go build 
+	@go build
 
 test: gotest golint govet
 
