@@ -1,15 +1,10 @@
 SHELL := /bin/bash
 
-dep:
-ifeq ($(shell which dep 2>/dev/null),)
-	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-endif
-
-deps: dep
+deps:
 	@dep ensure
 
 build: deps
-	@go build 
+	@go build
 
 test: gotest golint govet
 
@@ -30,4 +25,4 @@ coverage:
 migrate:
 	@mysql -h $(REPOSITORY_MYSQL_ADDRESS) -u $(REPOSITORY_MYSQL_USER) < database/schema.sql
 
-.PHONY: dep deps build test gotest golint govet coverage
+.PHONY: deps build test gotest golint govet coverage
