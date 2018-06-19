@@ -14,8 +14,10 @@ import (
 )
 
 var (
-	urlFormat       = "https://storage.googleapis.com/%s/%s"
-	bucketNameEupho = "sound-euphonium"
+	urlFormat = "https://storage.googleapis.com/%s/%s"
+
+	bucketNameEupho   = "sound-euphonium"
+	bucketNameHamachi = "oregairu"
 )
 
 func init() {
@@ -34,12 +36,69 @@ func NewGCSStore(cfg *config.Config) (*store.Store, error) {
 	if err != nil {
 		return nil, err
 	}
+	hamachi, err := newGCSHamachiStore(cfg, client)
+	if err != nil {
+		return nil, err
+	}
 	return &store.Store{
-		Eupho: eupho,
+		Eupho:   eupho,
+		Hamachi: hamachi,
 	}, nil
 }
 
 type gcsEuphoStore struct {
+	*baseStore
+}
+
+func newGCSEuphoStore(cfg *config.Config, client *storage.Client) (*gcsEuphoStore, error) {
+	base, err := newBaseStore(cfg, client.Bucket(bucketNameEupho))
+	if err != nil {
+		return nil, err
+	}
+	return &gcsEuphoStore{base}, nil
+}
+
+func (s *gcsEuphoStore) Get() (*entity.EuphoImage, error) {
+	obj, err := s.baseStore.get()
+	if err != nil {
+		return nil, err
+	}
+	return &entity.EuphoImage{
+		URL: fmt.Sprintf(urlFormat, bucketNameEupho, obj.Name),
+	}, nil
+}
+
+func (s *gcsEuphoStore) Close() error {
+	return nil
+}
+
+type gcsHamachiStore struct {
+	*baseStore
+}
+
+func newGCSHamachiStore(cfg *config.Config, client *storage.Client) (*gcsHamachiStore, error) {
+	base, err := newBaseStore(cfg, client.Bucket(bucketNameHamachi))
+	if err != nil {
+		return nil, err
+	}
+	return &gcsHamachiStore{base}, nil
+}
+
+func (s *gcsHamachiStore) Get() (*entity.HamachiImage, error) {
+	obj, err := s.baseStore.get()
+	if err != nil {
+		return nil, err
+	}
+	return &entity.HamachiImage{
+		URL: fmt.Sprintf(urlFormat, bucketNameHamachi, obj.Name),
+	}, nil
+}
+
+func (s *gcsHamachiStore) Close() error {
+	return nil
+}
+
+type baseStore struct {
 	cfg *config.Config
 
 	bkt *storage.BucketHandle
@@ -48,31 +107,15 @@ type gcsEuphoStore struct {
 	cachedAt time.Time
 }
 
-func newGCSEuphoStore(cfg *config.Config, client *storage.Client) (*gcsEuphoStore, error) {
-	s := &gcsEuphoStore{
-		bkt: client.Bucket(bucketNameEupho),
+func newBaseStore(cfg *config.Config, bkt *storage.BucketHandle) (*baseStore, error) {
+	s := &baseStore{
 		cfg: cfg,
+		bkt: bkt,
 	}
 	return s, s.cacheObjs()
 }
 
-func (s *gcsEuphoStore) Get() (*entity.EuphoImage, error) {
-	if expired(s.cachedAt, s.cfg.Store.GCS.CacheDuration) {
-		if err := s.cacheObjs(); err != nil {
-			return nil, err
-		}
-	}
-	n := rand.Intn(len(s.objs))
-	return &entity.EuphoImage{
-		URL: fmt.Sprintf(urlFormat, bucketNameEupho, s.objs[n].Name),
-	}, nil
-}
-
-func (s *gcsEuphoStore) Close() error {
-	return nil
-}
-
-func (s *gcsEuphoStore) cacheObjs() error {
+func (s *baseStore) cacheObjs() error {
 	it := s.bkt.Objects(context.Background(), nil)
 
 	attrs := make([]*storage.ObjectAttrs, 0, 500)
@@ -93,6 +136,16 @@ func (s *gcsEuphoStore) cacheObjs() error {
 	})
 	s.cachedAt = time.Now()
 	return nil
+}
+
+func (s *baseStore) get() (*storage.ObjectAttrs, error) {
+	if expired(s.cachedAt, s.cfg.Store.GCS.CacheDuration) {
+		if err := s.cacheObjs(); err != nil {
+			return nil, err
+		}
+	}
+	n := rand.Intn(len(s.objs))
+	return s.objs[n], nil
 }
 
 func expired(t time.Time, duration time.Duration) bool {
