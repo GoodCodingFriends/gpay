@@ -33,6 +33,7 @@ const (
 	cmdTypeTx      = "tx"
 	cmdTypeTxs     = "txs"
 	cmdTypeEupho   = "eupho"
+	cmdTypeHamachi = "hamachi"
 	cmdTypeHelp    = "help"
 
 	actionNameAccept = "accept"
@@ -203,6 +204,12 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 			param = sp[2:]
 		}
 		return b.handleEuphoGacha(e, param)
+	case cmdTypeHamachi:
+		param := []string{}
+		if len(sp) >= 3 {
+			param = sp[2:]
+		}
+		return b.handleHamachiGacha(e, param)
 	case cmdTypeHelp, "助けて", "たすけて":
 		// TODO: use defined type
 		txt := `gPAY: a Payment Application for You
@@ -213,6 +220,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	balance 今持っているお金の残高を見る
 	txs     今まで発生したやりとりを見る
 	eupho   響け！ユーフォニアムガチャ
+	hamachi やはり俺の青春ラブコメはまちがっている。ガチャ
 	help    このテキストを表示する`
 		b.postMessage(e, fmt.Sprintf("```%s```", txt))
 		return nil
@@ -344,26 +352,59 @@ func (b *SlackBot) handleListTransactionsCommand(e *slack.MessageEvent, fromID e
 	return nil
 }
 
-func (b *SlackBot) handleEuphoGacha(e *slack.MessageEvent, args []string) error {
-	img, err := b.store.Eupho.Get()
-	if err != nil {
-		return err
-	}
+type gachaMode int
 
-	switch {
-	// LGTM mode
-	case len(args) == 1 && args[0] == "lgtm":
-		lgtm, err := getLGTM(img.URL)
+const (
+	gachaModeNormal = iota
+	gachaModeLGTM
+)
+
+func (b *SlackBot) handleGacha(e *slack.MessageEvent, url string, mode gachaMode) error {
+	switch mode {
+	case gachaModeLGTM:
+		lgtm, err := getLGTM(url)
 		if err != nil {
 			return err
 		}
 		if err := b.uploadFile(e.Msg.Channel, lgtm); err != nil {
 			return err
 		}
+	case gachaModeNormal:
+		b.postMessage(e, url)
 	default:
-		b.postMessage(e, img.URL)
+		return errors.New("unknown gacha mode")
 	}
 	return nil
+}
+
+func (b *SlackBot) handleEuphoGacha(e *slack.MessageEvent, args []string) error {
+	img, err := b.store.Eupho.Get()
+	if err != nil {
+		return err
+	}
+
+	var mode gachaMode
+	switch {
+	case len(args) == 1 && args[0] == "lgtm":
+		mode = gachaModeLGTM
+	}
+
+	return b.handleGacha(e, img.URL, mode)
+}
+
+func (b *SlackBot) handleHamachiGacha(e *slack.MessageEvent, args []string) error {
+	img, err := b.store.Hamachi.Get()
+	if err != nil {
+		return err
+	}
+
+	var mode gachaMode
+	switch {
+	case len(args) == 1 && args[0] == "lgtm":
+		mode = gachaModeLGTM
+	}
+
+	return b.handleGacha(e, img.URL, mode)
 }
 
 func (b *SlackBot) handleReactionAddedEvent(e *slack.ReactionAddedEvent) error {
