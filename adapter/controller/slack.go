@@ -170,6 +170,8 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		return ErrNotGPAYCommand
 	}
 
+	log.Println(e.Text)
+
 	sp := strings.Split(e.Text, " ")
 	if len(sp) < 2 {
 		// show usage
