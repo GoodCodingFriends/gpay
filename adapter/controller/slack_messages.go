@@ -1,6 +1,9 @@
 package controller
 
-import "github.com/GoodCodingFriends/gpay/entity"
+import (
+	"github.com/GoodCodingFriends/gpay/entity"
+	"github.com/pkg/errors"
+)
 
 var (
 	errToSlackMessage = map[error]string{
@@ -16,3 +19,11 @@ var (
 	claimAcceptedMessage = ":money_with_wings: お金を支払ったよ"
 	claimRejectedMessage = ":no_good: 支払いを断ったよ"
 )
+
+func toSlackMessage(err error) string {
+	s, ok := errToSlackMessage[errors.Cause(err)]
+	if !ok {
+		return err.Error()
+	}
+	return s
+}

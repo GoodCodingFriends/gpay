@@ -3,7 +3,6 @@ package controller
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -23,6 +22,7 @@ import (
 	"github.com/k0kubun/pp"
 	"github.com/ktr0731/lgtm"
 	"github.com/nlopes/slack"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -99,9 +99,7 @@ func (b *SlackBot) Listen() error {
 
 			if err != nil {
 				b.logger.Printf("handleMessageEvent: %s", err)
-				if msg, ok := errToSlackMessage[err]; ok {
-					b.postMessage(e, msg)
-				}
+				b.postMessage(e, toSlackMessage(err))
 				continue
 			}
 		case *slack.ReactionAddedEvent:
@@ -175,7 +173,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 	sp := strings.Split(e.Text, " ")
 	if len(sp) < 2 {
 		// show usage
-		return ErrInvalidUsage
+		return errors.Wrap(ErrInvalidUsage, "gpay command requires least one argument")
 	}
 
 	cmdType := sp[1]
@@ -186,7 +184,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		return b.handlePingCommand(e)
 	case cmdTypePay:
 		if len(sp) != 4 {
-			return ErrInvalidUsage
+			return errors.Wrap(ErrInvalidUsage, "")
 		}
 		return b.handlePayCommand(e, from, sp[2:])
 	case cmdTypeClaim:
