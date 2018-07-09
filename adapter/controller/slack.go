@@ -168,9 +168,10 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		return ErrNotGPAYCommand
 	}
 
-	log.Println(e.Text)
+	txt := strings.TrimSpace(e.Text)
+	log.Println(txt)
 
-	sp := strings.Split(e.Text, " ")
+	sp := strings.Split(txt, " ")
 	if len(sp) < 2 {
 		// show usage
 		return errors.Wrap(ErrInvalidUsage, "gpay command requires least one argument")
@@ -184,7 +185,7 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		return b.handlePingCommand(e)
 	case cmdTypePay:
 		if len(sp) != 4 {
-			return errors.Wrap(ErrInvalidUsage, "pay command requires amount and target user ID")
+			return errors.Wrapf(ErrInvalidUsage, "pay command requires amount and target user ID: %x", sp)
 		}
 		return b.handlePayCommand(e, from, sp[2:])
 	case cmdTypeClaim:
