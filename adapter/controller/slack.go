@@ -184,12 +184,12 @@ func (b *SlackBot) handleMessageEvent(e *slack.MessageEvent) error {
 		return b.handlePingCommand(e)
 	case cmdTypePay:
 		if len(sp) != 4 {
-			return errors.Wrap(ErrInvalidUsage, "")
+			return errors.Wrap(ErrInvalidUsage, "pay command requires amount and target user ID")
 		}
 		return b.handlePayCommand(e, from, sp[2:])
 	case cmdTypeClaim:
 		if len(sp) != 4 {
-			return ErrInvalidUsage
+			return errors.Wrap(ErrInvalidUsage, "claim comamnd requires amount and target user ID")
 		}
 		return b.handleClaimCommand(e, from, sp[2:])
 	case cmdTypeBalance:
@@ -494,7 +494,7 @@ func (p *parser) parse(args []string) (to entity.UserID, amount entity.Amount, e
 		return
 	}
 
-	err = ErrInvalidUsage
+	err = errors.Wrap(ErrInvalidUsage, "two arguments passed, but failed to parse as amount and user ID")
 	return
 }
 
