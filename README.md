@@ -5,3 +5,12 @@ gPAY: a Payment Application for You
 
 ![](./gpay1.png)  
 ![](./gpay2.png)  
+
+
+Please set these envvars.
+```
+Environment = "REPOSITORY_MYSQL_NET=unix"
+Environment = "REPOSITORY_MYSQL_ADDRESS=/var/run/mysqld/mysqld.sock"
+Environment = "CONTROLLER_SLACK_APITOKEN="
+Environment = "CONTROLLER_SLACK_VERIFICATIONTOKEN="
+```

@@ -16,8 +16,8 @@ import (
 var (
 	urlFormat = "https://storage.googleapis.com/%s/%s"
 
-	bucketNameEupho   = "sound-euphonium"
-	bucketNameHamachi = "oregairu"
+	bucketNameEupho   = "eupho"
+	bucketNameHamachi = "hamachi"
 )
 
 func init() {
