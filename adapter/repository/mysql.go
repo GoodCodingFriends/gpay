@@ -302,11 +302,12 @@ func (r *mySQLTxRepository) Store(ctx context.Context, tx *entity.Transaction) e
 
 func newMySQLDB(cfg *config.Config) (*sqlx.DB, error) {
 	dsn := &mysql.Config{
-		User:   cfg.Repository.MySQL.UserName,
-		Passwd: cfg.Repository.MySQL.Password,
-		Net:    cfg.Repository.MySQL.Net,
-		Addr:   cfg.Repository.MySQL.Address,
-		DBName: cfg.Repository.MySQL.DBName,
+		User:                 cfg.Repository.MySQL.UserName,
+		Passwd:               cfg.Repository.MySQL.Password,
+		Net:                  cfg.Repository.MySQL.Net,
+		Addr:                 cfg.Repository.MySQL.Address,
+		DBName:               cfg.Repository.MySQL.DBName,
+		AllowNativePasswords: true,
 	}
 	return sqlOpen("mysql", dsn.FormatDSN())
 }
