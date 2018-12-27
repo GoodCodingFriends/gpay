@@ -1,9 +1,6 @@
 SHELL := /bin/bash
 
-deps:
-	@dep ensure
-
-build: deps
+build:
 	@go build
 
 test: gotest golint govet
@@ -25,4 +22,4 @@ coverage:
 migrate:
 	@mysql -h $(REPOSITORY_MYSQL_ADDRESS) -u $(REPOSITORY_MYSQL_USER) < database/schema.sql
 
-.PHONY: deps build test gotest golint govet coverage
+.PHONY: build test gotest golint govet coverage migrate
