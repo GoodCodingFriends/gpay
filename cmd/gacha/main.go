@@ -7,13 +7,15 @@ import (
 	"os"
 
 	"github.com/GoodCodingFriends/gpay/slack"
+	"github.com/go-chi/chi"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.Handle("/slack", slack.Handler())
+	mux := chi.NewRouter()
+	mux.Route("/slack", slack.Router)
 	addr := fmt.Sprintf(":%s", os.Getenv("PORT"))
-	if err := http.ListenAndServe(addr, nil); err != http.ErrServerClosed {
+	log.Printf("server listen in %s", addr)
+	if err := http.ListenAndServe(addr, mux); err != http.ErrServerClosed {
 		log.Fatalf("failed to launch the server: %s", err)
 	}
 }
