@@ -1,7 +1,10 @@
 SHELL := /bin/bash
 
-build:
-	@go build
+build/gacha:
+	@go build -o gacha ./cmd/gacha 
+
+image/gacha:
+	@docker build -t gpay-gacha -f ./cmd/gacha/Dockerfile .
 
 test: gotest golint govet
 
