@@ -1,10 +1,25 @@
 SHELL := /bin/bash
 
+REGISTRY ?= "gpay-gacha"
+GACHA_CLOUD_RUN_REGION ?= "us-central1"
+
 build/gacha:
 	@go build -o gacha ./cmd/gacha 
 
 image/gacha:
-	@docker build -t gpay-gacha -f ./cmd/gacha/Dockerfile .
+	@echo "building image..."
+	@echo "registry: $(REGISTRY)"
+	@docker build -t $(REGISTRY) -f ./cmd/gacha/Dockerfile .
+
+remote/image/gacha: image/gacha
+	@docker push $(REGISTRY)
+
+deploy/gacha: remote/image/gacha
+	@gcloud beta run deploy \
+		--allow-unauthenticated \
+		--platform managed \
+		--region $(GACHA_CLOUD_RUN_REGION) $(GACHA_CLOUD_RUN_SERVICE_NAME) \
+		--image $(REGISTRY)
 
 test: gotest golint govet
 
