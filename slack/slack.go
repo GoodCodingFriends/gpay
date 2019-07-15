@@ -53,6 +53,7 @@ type appMentionRequest struct {
 }
 
 func Router(r chi.Router) {
+	r.Use(authenticationMiddleware)
 	r.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
