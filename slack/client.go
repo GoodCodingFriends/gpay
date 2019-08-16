@@ -1,19 +1,19 @@
 package slack
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
+	"log"
 	"os"
+	"time"
 
 	"github.com/morikuni/failure"
+	nslack "github.com/nlopes/slack"
 )
 
 type apiClient struct {
-	c     *http.Client
+	c     *nslack.Client
 	token string
 }
 
@@ -23,40 +23,23 @@ func newAPIClient() *apiClient {
 		panic("$SLACK_ACCESS_TOKEN is misisng")
 	}
 	return &apiClient{
-		c:     http.DefaultClient,
+		c:     nslack.New(token),
 		token: token,
 	}
 }
 
-func (c *apiClient) UploadFile(ctx context.Context, r io.Reader) error {
-	b, err := ioutil.ReadAll(r)
-	if err != nil {
-		return failure.Wrap(err)
-	}
-	var in bytes.Buffer
-	enc := json.NewEncoder(&in)
-	err = enc.Encode(struct {
-		Token   string `json:"token"`
-		Content []byte `json:"content"`
-	}{
-		Token:   c.token,
-		Content: b,
+func (c *apiClient) UploadFile(ctx context.Context, r io.Reader, channel string) error {
+	name := fmt.Sprintf("%d.png", time.Now().UnixNano())
+	f, err := c.c.UploadFileContext(ctx, nslack.FileUploadParameters{
+		Title:    name,
+		Filename: name,
+		Filetype: "png",
+		Reader:   r,
+		Channels: []string{channel},
 	})
 	if err != nil {
 		return failure.Wrap(err)
 	}
-
-	req, err := http.NewRequest(http.MethodPost, "https://slack.com/api/files.upload", &in)
-	if err != nil {
-		return failure.Wrap(err)
-	}
-	req = req.WithContext(ctx)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	res, err := c.c.Do(req)
-	if err != nil {
-		return failure.Wrap(err)
-	}
-	defer res.Body.Close()
-
+	log.Println(f)
 	return nil
 }

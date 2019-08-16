@@ -1,13 +1,20 @@
 package slack
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 
+	"github.com/GoodCodingFriends/gpay/cli"
+	"github.com/GoodCodingFriends/gpay/source"
 	"github.com/go-chi/chi"
+	"github.com/morikuni/failure"
 )
 
 type commonRequest struct {
@@ -95,5 +102,26 @@ func urlVerificationHandler(w http.ResponseWriter, r *http.Request, req *urlVeri
 }
 
 func appMentionHandler(w http.ResponseWriter, r *http.Request, e *event) {
-	log.Println(e.User, e.Text)
+	log.Println(e)
+
+	var out bytes.Buffer
+	c := &cli.CLI{Writer: &out}
+	args := strings.Split(strings.TrimSpace(e.Text), " ")
+	switch err := c.Run(args[1:]); {
+	case err == nil:
+		break
+	case failure.Is(err, cli.InvalidUsageCode, cli.UnknownSubCommandCode, source.InvalidParameterCode):
+		w.WriteHeader(http.StatusBadRequest)
+		log.Println(err)
+		return
+	default:
+		args[1] = "lgtm"
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := newAPIClient().UploadFile(ctx, &out, e.Channel); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+	}
 }
