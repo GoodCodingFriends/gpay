@@ -2,10 +2,10 @@ package gcs
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -33,7 +33,11 @@ func New(ctx context.Context, bucketNames []string) (source.Source, error) {
 
 	for _, name := range bucketNames {
 		if _, err := bucketSize(name); err != nil {
-			return nil, failure.Wrap(errors.New("GCS bucket size env missing"), failure.Context{"bucket": name})
+			return nil, failure.Wrap(
+				err,
+				failure.WithCode(source.InvalidParameterCode),
+				failure.Context{"bucket": name},
+			)
 		}
 	}
 
@@ -68,7 +72,7 @@ func (s *gcsSource) Random(ctx context.Context) (io.ReadCloser, error) {
 
 func bucketSize(name string) (int, error) {
 	s := fmt.Sprintf("GCS_BUCKET_SIZE_%s", strings.ToUpper(name))
-	n, err := strconv.Atoi(s)
+	n, err := strconv.Atoi(os.Getenv(s))
 	if err != nil {
 		return 0, failure.Wrap(err)
 	}
