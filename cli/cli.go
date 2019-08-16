@@ -39,8 +39,9 @@ func (c *CLI) Run(args []string) error {
 			if len(args) == 1 {
 				return
 			}
-			src, err := gcs.New(ctx, args[1:])
-			if err != nil {
+			src, berr := gcs.New(ctx, args[1:])
+			if berr != nil {
+				err = berr
 				return
 			}
 			usecase.Inject(
