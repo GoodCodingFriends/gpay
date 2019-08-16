@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"os"
 	"strconv"
@@ -59,6 +60,7 @@ func (s *gcsSource) Random(ctx context.Context) (io.ReadCloser, error) {
 		i   int
 		obj *storage.ObjectAttrs
 	)
+	log.Printf("target image: %s, %d", bktName, n)
 	for {
 		obj, err = iter.Next()
 		if err == iterator.Done {

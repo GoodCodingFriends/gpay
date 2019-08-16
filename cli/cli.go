@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/GoodCodingFriends/gpay/source/gcs"
 	"github.com/GoodCodingFriends/gpay/usecase"
@@ -25,40 +24,30 @@ type CLI struct {
 }
 
 func (c *CLI) Run(args []string) error {
-	if len(args) == 0 {
-		return failure.New(InvalidUsageCode)
+	ctx := context.Background()
+	var err error
+	c.initOnce.Do(func() {
+		c.initCommon()
+		if len(args) == 0 {
+			args = []string{"eupho"}
+		}
+		src, berr := gcs.New(ctx, args)
+		if berr != nil {
+			err = berr
+			return
+		}
+		usecase.Inject(
+			usecase.InteractorParams{
+				Source: src,
+			},
+		)
+	})
+	if err != nil {
+		return failure.Wrap(err)
 	}
-
-	switch args[0] {
-	case "lgtm":
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		var err error
-		c.initOnce.Do(func() {
-			c.initCommon()
-			if len(args) == 1 {
-				return
-			}
-			src, berr := gcs.New(ctx, args[1:])
-			if berr != nil {
-				err = berr
-				return
-			}
-			usecase.Inject(
-				usecase.InteractorParams{
-					Source: src,
-				},
-			)
-		})
-		if err != nil {
-			return failure.Wrap(err)
-		}
-		err = usecase.OverlayLGTM(ctx, c.Writer)
-		if err != nil {
-			return failure.Wrap(err)
-		}
-	default:
-		return failure.New(UnknownSubCommandCode, failure.Context{"name": args[0]})
+	err = usecase.OverlayLGTM(ctx, c.Writer)
+	if err != nil {
+		return failure.Wrap(err)
 	}
 	return nil
 }

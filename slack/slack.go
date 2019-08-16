@@ -11,9 +11,7 @@ import (
 	"strings"
 
 	"github.com/GoodCodingFriends/gpay/cli"
-	"github.com/GoodCodingFriends/gpay/source"
 	"github.com/go-chi/chi"
-	"github.com/morikuni/failure"
 )
 
 type commonRequest struct {
@@ -76,9 +74,12 @@ func Router(r chi.Router) {
 		case "url_verification":
 			urlVerificationHandler(w, r, req.urlVerificationRequest())
 		case "event_callback":
+			w.WriteHeader(http.StatusOK)
 			switch req.Event.Type {
 			case "app_mention":
-				appMentionHandler(w, r, req.Event)
+				// Process asynchronously because the server which is using Events API must be respond within 3 seconds.
+				// ref. https://api.slack.com/events-api
+				go appMentionHandler(w, r, req.Event)
 			}
 		default:
 			w.WriteHeader(http.StatusNotFound)
@@ -93,35 +94,14 @@ func urlVerificationHandler(w http.ResponseWriter, r *http.Request, req *urlVeri
 }
 
 func appMentionHandler(w http.ResponseWriter, r *http.Request, e *event) {
-	log.Println(e)
-
 	var out bytes.Buffer
 	c := &cli.CLI{Writer: &out}
 	args := strings.Split(strings.TrimSpace(e.Text), " ")
-	switch err := c.Run(args[1:]); {
-	case err == nil:
-		break
-	case failure.Is(err, cli.InvalidUsageCode, cli.UnknownSubCommandCode, source.InvalidParameterCode):
-		w.WriteHeader(http.StatusBadRequest)
+	if err := c.Run(args[1:]); err != nil {
 		log.Println(err)
 		return
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(err)
 	}
-
 	if err := newAPIClient().UploadFile(context.Background(), &out, e.Channel); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(struct {
-		OK bool `json:"ok"`
-	}{
-		OK: true,
-	})
-	if err != nil {
 		log.Println(err)
 	}
 }
