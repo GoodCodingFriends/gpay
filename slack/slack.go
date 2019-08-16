@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/GoodCodingFriends/gpay/cli"
 	"github.com/GoodCodingFriends/gpay/source"
@@ -51,14 +50,6 @@ func (r *commonRequest) urlVerificationRequest() *urlVerificationRequest {
 
 type urlVerificationRequest struct {
 	challenge string
-}
-
-type appMentionRequest struct {
-	user           string
-	text           string
-	timestamp      json.Number
-	channel        string
-	eventTimestamp json.Number
 }
 
 func Router(r chi.Router) {
@@ -115,13 +106,22 @@ func appMentionHandler(w http.ResponseWriter, r *http.Request, e *event) {
 		log.Println(err)
 		return
 	default:
-		args[1] = "lgtm"
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	if err := newAPIClient().UploadFile(ctx, &out, e.Channel); err != nil {
+	if err := newAPIClient().UploadFile(context.Background(), &out, e.Channel); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(w).Encode(struct {
+		OK bool `json:"ok"`
+	}{
+		OK: true,
+	})
+	if err != nil {
+		log.Println(err)
 	}
 }
