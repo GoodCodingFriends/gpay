@@ -22,21 +22,23 @@ type commonRequest struct {
 	Timestamp      json.Number `json:"ts"`
 	Channel        string      `json:"channel"`
 	EventTimestamp json.Number `json:"event_ts"`
+
+	// event_callback
+	Event *event `json:"event"`
+}
+
+type event struct {
+	Type           string      `json:"type"`
+	User           string      `json:"user"`
+	Text           string      `json:"text"`
+	Timestamp      json.Number `json:"ts"`
+	Channel        string      `json:"channel"`
+	EventTimestamp json.Number `json:"event_ts"`
 }
 
 func (r *commonRequest) urlVerificationRequest() *urlVerificationRequest {
 	return &urlVerificationRequest{
 		challenge: r.Challenge,
-	}
-}
-
-func (r *commonRequest) appMentionRequest() *appMentionRequest {
-	return &appMentionRequest{
-		user:           r.User,
-		text:           r.Text,
-		timestamp:      r.Timestamp,
-		channel:        r.Channel,
-		eventTimestamp: r.EventTimestamp,
 	}
 }
 
@@ -59,7 +61,6 @@ func Router(r chi.Router) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		log.Println(r.Header)
 		var req commonRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			switch err.(type) {
@@ -76,8 +77,11 @@ func Router(r chi.Router) {
 		switch req.Type {
 		case "url_verification":
 			urlVerificationHandler(w, r, req.urlVerificationRequest())
-		case "app_mention":
-			appMentionHandler(w, r, req.appMentionRequest())
+		case "event_callback":
+			switch req.Event.Type {
+			case "app_mention":
+				appMentionHandler(w, r, req.Event)
+			}
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -90,6 +94,6 @@ func urlVerificationHandler(w http.ResponseWriter, r *http.Request, req *urlVeri
 	}
 }
 
-func appMentionHandler(w http.ResponseWriter, r *http.Request, req *appMentionRequest) {
-	log.Println(req.user, req.text)
+func appMentionHandler(w http.ResponseWriter, r *http.Request, e *event) {
+	log.Println(e.User, e.Text)
 }
