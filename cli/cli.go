@@ -29,7 +29,7 @@ func (c *CLI) Run(args []string) error {
 	c.initOnce.Do(func() {
 		c.initCommon()
 		if len(args) == 0 {
-			args = []string{"eupho"}
+			args = []string{"eupho", "hamachi"}
 		}
 		src, berr := gcs.New(ctx, args)
 		if berr != nil {
