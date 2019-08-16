@@ -47,10 +47,13 @@ func New(ctx context.Context, bucketNames []string) (source.Source, error) {
 func (s *gcsSource) Random(ctx context.Context) (io.ReadCloser, error) {
 	bktName := s.bucketNames[rand.Int31n(int32(len(s.bucketNames)))]
 	bkt := s.c.Bucket(bktName)
-	n, err := bucketSize(bktName)
+	size, err := bucketSize(bktName)
 	if err != nil {
 		return nil, failure.Wrap(err)
 	}
+
+	n := int(rand.Int31n(int32(size)))
+
 	iter := bkt.Objects(ctx, nil)
 	var (
 		i   int
@@ -61,7 +64,7 @@ func (s *gcsSource) Random(ctx context.Context) (io.ReadCloser, error) {
 		if err == iterator.Done {
 			return nil, failure.Wrap(err, failure.Message("unexpected iterator.Done"))
 		}
-		if i == n {
+		if i+1 == n {
 			break
 		}
 		i++
