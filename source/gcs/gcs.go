@@ -47,7 +47,7 @@ func New(ctx context.Context, bucketNames []string) (source.Source, error) {
 
 func (s *gcsSource) Random(ctx context.Context) (io.ReadCloser, error) {
 	bktName := s.bucketNames[rand.Int31n(int32(len(s.bucketNames)))]
-	bkt := s.c.Bucket(bktName)
+	bkt := s.c.Bucket(fmt.Sprintf("%s-lgtm", bktName))
 	size, err := bucketSize(bktName)
 	if err != nil {
 		return nil, failure.Wrap(err)

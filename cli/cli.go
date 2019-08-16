@@ -45,7 +45,7 @@ func (c *CLI) Run(args []string) error {
 	if err != nil {
 		return failure.Wrap(err)
 	}
-	err = usecase.OverlayLGTM(ctx, c.Writer)
+	err = usecase.FetchLGTM(ctx, c.Writer)
 	if err != nil {
 		return failure.Wrap(err)
 	}
