@@ -7,10 +7,10 @@ import (
 	"github.com/morikuni/failure"
 )
 
-func FetchLGTM(ctx context.Context, w io.Writer) error {
-	return defaultInteractor.FetchLGTM(ctx, w)
+func FetchImage(ctx context.Context, w io.Writer) error {
+	return defaultInteractor.FetchImage(ctx, w)
 }
-func (i *interactor) FetchLGTM(ctx context.Context, w io.Writer) error {
+func (i *interactor) FetchImage(ctx context.Context, w io.Writer) error {
 	r, err := i.Source.Random(ctx)
 	if err != nil {
 		return failure.Wrap(err)

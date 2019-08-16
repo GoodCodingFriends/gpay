@@ -28,10 +28,15 @@ func (c *CLI) Run(args []string) error {
 	var err error
 	c.initOnce.Do(func() {
 		c.initCommon()
+
+		var lgtm bool
 		if len(args) == 0 {
 			args = []string{"eupho", "hamachi", "hanairo"}
+		} else if args[0] == "lgtm" {
+			args = args[1:]
+			lgtm = true
 		}
-		src, berr := gcs.New(ctx, args)
+		src, berr := gcs.New(ctx, args, lgtm)
 		if berr != nil {
 			err = berr
 			return
@@ -45,7 +50,7 @@ func (c *CLI) Run(args []string) error {
 	if err != nil {
 		return failure.Wrap(err)
 	}
-	err = usecase.FetchLGTM(ctx, c.Writer)
+	err = usecase.FetchImage(ctx, c.Writer)
 	if err != nil {
 		return failure.Wrap(err)
 	}

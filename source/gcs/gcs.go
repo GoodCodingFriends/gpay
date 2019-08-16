@@ -24,9 +24,10 @@ func init() {
 type gcsSource struct {
 	c           *storage.Client
 	bucketNames []string
+	lgtm        bool
 }
 
-func New(ctx context.Context, bucketNames []string) (source.Source, error) {
+func New(ctx context.Context, bucketNames []string, lgtm bool) (source.Source, error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, failure.Wrap(err)
@@ -42,13 +43,17 @@ func New(ctx context.Context, bucketNames []string) (source.Source, error) {
 		}
 	}
 
-	return &gcsSource{c: client, bucketNames: bucketNames}, nil
+	return &gcsSource{c: client, bucketNames: bucketNames, lgtm: lgtm}, nil
 }
 
 func (s *gcsSource) Random(ctx context.Context) (io.ReadCloser, error) {
-	bktName := s.bucketNames[rand.Int31n(int32(len(s.bucketNames)))]
-	bkt := s.c.Bucket(fmt.Sprintf("%s-lgtm", bktName))
-	size, err := bucketSize(bktName)
+	kind := s.bucketNames[rand.Int31n(int32(len(s.bucketNames)))]
+	bktName := kind
+	if s.lgtm {
+		bktName = fmt.Sprintf("%s-lgtm", kind)
+	}
+	bkt := s.c.Bucket(bktName)
+	size, err := bucketSize(kind)
 	if err != nil {
 		return nil, failure.Wrap(err)
 	}
