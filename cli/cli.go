@@ -31,7 +31,7 @@ func (c *CLI) Run(args []string) error {
 
 		var lgtm bool
 		if len(args) == 0 {
-			args = []string{"eupho", "hamachi", "hanairo", "saekano", "kaguya"}
+			args = []string{"eupho", "hamachi", "hanairo", "saekano", "kaguya", "mazoku"}
 		} else if args[0] == "lgtm" {
 			args = args[1:]
 			lgtm = true
